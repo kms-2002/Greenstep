@@ -25,7 +25,7 @@ export interface Challenge {
   description: string;
   detailGuide: string;
   carbonReduction: number; // kg CO2e per action
-  unitDescription: string; // e.g. "1회 실천", "10km 이동"
+  unitDescription: string;
   rewardPoints: number;
   participantsCount: number;
   verificationMethod: string;
@@ -96,7 +96,7 @@ export interface PersonalRank {
   nickname: string;
   university: string;
   department: string;
-  carbonReduction: number; // kg CO2e
+  carbonReduction: number;
   points: number;
   isCurrentUser?: boolean;
   avatarUrl?: string;
@@ -106,7 +106,7 @@ export interface DepartmentRank {
   rank: number;
   department: string;
   university: string;
-  totalCarbonReduction: number; // kg CO2e
+  totalCarbonReduction: number;
   participantCount: number;
   avgCarbonReduction: number;
   isUserDept?: boolean;
@@ -128,17 +128,39 @@ export interface AdminKPIs {
   monthlyParticipationRate: number;
 }
 
-export interface ActivityHistoryItem {
-  date: string;
-  dayName: string;
-  carbonSaved: number; // kg CO2e
-  count: number;
+// ==========================================
+// Next.js App Router + Supabase Board Types
+// ==========================================
+export type PostCategory = 'all' | 'verification' | 'tip' | 'free' | 'dept';
+
+export interface PostComment {
+  id: string;
+  postId: string;
+  authorId: string;
+  authorNickname: string;
+  authorDepartment: string;
+  authorAvatar?: string;
+  content: string;
+  createdAt: string;
 }
 
-export interface ActionBreakdownItem {
-  category: string;
-  name: string;
-  icon: string;
-  count: number;
-  carbonSaved: number;
+export interface Post {
+  id: string;
+  authorId: string;
+  authorNickname: string;
+  authorUniversity: string;
+  authorDepartment: string;
+  authorGrade: string;
+  authorAvatar?: string;
+  category: PostCategory;
+  categoryName: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  challengeTag?: string;
+  carbonSavedTag?: number;
+  likesCount: number;
+  commentsCount: number;
+  isLiked?: boolean;
+  createdAt: string;
 }

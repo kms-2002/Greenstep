@@ -10,6 +10,7 @@ import { LandingScreen } from './components/mobile/LandingScreen';
 import { HomeTab } from './components/mobile/tabs/HomeTab';
 import { ChallengeTab } from './components/mobile/tabs/ChallengeTab';
 import { RankingTab } from './components/mobile/tabs/RankingTab';
+import { BoardTab } from './components/mobile/tabs/BoardTab';
 import { ActivityTab } from './components/mobile/tabs/ActivityTab';
 import { MyPageTab } from './components/mobile/tabs/MyPageTab';
 import { Wifi, Battery } from 'lucide-react';
@@ -38,7 +39,7 @@ const MainContent: React.FC = () => {
           </div>
         </div>
 
-        {/* Dynamic App Content Body - Completely Enclosed Inside Phone Frame */}
+        {/* Dynamic App Content Body */}
         <div className="flex-1 flex flex-col relative overflow-hidden bg-slate-50">
           {!isAuthenticated ? (
             <LandingScreen />
@@ -52,6 +53,7 @@ const MainContent: React.FC = () => {
                 {activeTab === 'home' && <HomeTab />}
                 {activeTab === 'challenge' && <ChallengeTab />}
                 {activeTab === 'ranking' && <RankingTab />}
+                {activeTab === 'board' && <BoardTab />}
                 {activeTab === 'activity' && <ActivityTab />}
                 {activeTab === 'my' && <MyPageTab />}
               </main>

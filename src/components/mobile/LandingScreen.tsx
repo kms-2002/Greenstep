@@ -5,7 +5,7 @@ import { ArrowRight, Leaf, Trophy, TreePine, Zap } from 'lucide-react';
 export const LandingScreen: React.FC = () => {
   const { setIsAuthModalOpen, login } = useApp();
 
-  const handleStart = () => {
+  const handleOpenAuth = () => {
     setIsAuthModalOpen(true);
   };
 
@@ -14,57 +14,97 @@ export const LandingScreen: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-[#E5F5FA] flex flex-col justify-between animate-fadeIn relative overflow-hidden select-none">
-      {/* Top Ambient Glow */}
-      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[#D4F0FA] to-transparent pointer-events-none" />
+    <div className="h-full bg-gradient-to-b from-[#E8F6FA] via-white to-emerald-50/70 p-5 flex flex-col justify-between animate-fadeIn relative overflow-hidden select-none">
+      {/* Top Ambient Light Glow */}
+      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#D4F0FA] via-sky-100/50 to-transparent pointer-events-none" />
 
-      {/* Main Image Container - Perfectly Ratioed without Cropping */}
-      <div className="relative flex-1 w-full flex items-center justify-center p-3 pt-1 overflow-hidden">
-        {/* Exact User Artwork with Perfect Aspect Ratio */}
-        <div className="relative w-full max-w-full h-full flex items-center justify-center">
-          <img
-            src="/jinu_hero.jpg"
-            alt="GreenStep 시작 화면"
-            className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl shadow-sm drop-shadow-md"
-          />
+      {/* Top Section - Text from User's First Prompt */}
+      <div className="pt-2 space-y-2.5 relative z-10">
+        {/* Brand Tag & Subtitle */}
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-300 flex items-center justify-center shadow-md">
+            <Leaf className="w-4.5 h-4.5 text-emerald-950 stroke-[2.5]" />
+          </div>
+          <div>
+            <span className="text-xs font-black tracking-widest text-emerald-700 uppercase font-mono block">
+              GreenStep
+            </span>
+            <span className="text-[10px] text-slate-500 font-bold block -mt-0.5">
+              "작은 실천이 만드는 큰 변화"
+            </span>
+          </div>
+        </div>
+
+        {/* Main Title & Slogan from Prompt 1 */}
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-snug">
+          작은 실천이 만드는 <br />
+          <span className="text-emerald-600">큰 변화</span> 🌱
+        </h1>
+
+        {/* Description from First Prompt */}
+        <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+          일상생활에서 실천할 수 있는 친환경 행동에 참여하고 인증하여 탄소절감량과 포인트를 얻고, 개인 및 학과별 랭킹을 통해 지속적으로 동참해보세요!
+        </p>
+      </div>
+
+      {/* Center Section - New Transparent Jinu Mascot + 4 Floating Motion Eco Bubbles */}
+      <div className="my-2 relative flex items-center justify-center flex-1">
+        {/* Circular Light Backdrop */}
+        <div className="w-64 h-64 rounded-full bg-gradient-to-tr from-sky-100/70 via-emerald-100/60 to-white/90 flex items-center justify-center shadow-inner relative border border-emerald-100/80">
 
           {/* ======================================================== */}
-          {/* 4 LIVELY FLOATING ECO MOTION BUBBLES (User Favorite!)     */}
+          {/* 4 LIVELY FLOATING ECO MOTION BUBBLES                     */}
           {/* ======================================================== */}
-
-          {/* Floating Icon 1: Top-Left Leaf (Bounce motion) */}
-          <div className="absolute top-4 left-3 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-emerald-200/90 flex items-center justify-center animate-bounce duration-1000 z-20">
+          
+          {/* Floating Bubble 1: Top-Left Leaf (Bounce motion) */}
+          <div className="absolute top-2 left-1 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-emerald-200 flex items-center justify-center animate-bounce duration-1000 z-20">
             <Leaf className="w-5 h-5 text-emerald-600" />
           </div>
 
-          {/* Floating Icon 2: Top-Right Trophy (Pulse motion) */}
-          <div className="absolute top-6 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-amber-200/90 flex items-center justify-center animate-pulse z-20">
+          {/* Floating Bubble 2: Top-Right Trophy (Pulse motion) */}
+          <div className="absolute top-4 right-1 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-amber-200 flex items-center justify-center animate-pulse z-20">
             <Trophy className="w-5 h-5 text-amber-500 fill-amber-400" />
           </div>
 
-          {/* Floating Icon 3: Mid-Left Virtual Tree */}
-          <div className="absolute bottom-16 left-3 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-teal-200/90 flex items-center justify-center z-20">
+          {/* Floating Bubble 3: Bottom-Left Virtual Tree */}
+          <div className="absolute bottom-4 left-2 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-teal-200 flex items-center justify-center z-20">
             <TreePine className="w-5 h-5 text-teal-600" />
           </div>
 
-          {/* Floating Icon 4: Mid-Right Points Zap */}
-          <div className="absolute bottom-14 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-amber-200/90 flex items-center justify-center z-20">
+          {/* Floating Bubble 4: Bottom-Right Zap Points */}
+          <div className="absolute bottom-3 right-2 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-amber-200 flex items-center justify-center z-20">
             <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
+          </div>
+
+          {/* Center Transparent Jinu Mascot Image */}
+          <div className="relative z-10 w-48 h-48 flex items-center justify-center">
+            <img
+              src="/jinu_transparent.jpg"
+              alt="GreenStep 마스코트 지누"
+              className="w-full h-full object-contain drop-shadow-xl hover:scale-105 transition-transform duration-300"
+            />
           </div>
         </div>
       </div>
 
-      {/* Bottom Action Drawer Container */}
-      <div className="bg-white/95 backdrop-blur-md p-4 pt-3 space-y-2 border-t border-sky-100/80 relative z-30 shadow-lg shrink-0">
-        <button
-          onClick={handleStart}
-          className="w-full py-3.5 bg-gradient-to-r from-sky-500 via-emerald-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-extrabold text-base rounded-2xl shadow-xl shadow-sky-500/25 flex items-center justify-center space-x-2 transition-all active:scale-95 cursor-pointer"
-        >
-          <span>시작하기</span>
-          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-            <ArrowRight className="w-3.5 h-3.5 text-white" />
-          </div>
-        </button>
+      {/* Bottom Section - Login & Signup Buttons from First Prompt */}
+      <div className="space-y-2 relative z-30 pt-1">
+        <div className="grid grid-cols-2 gap-2.5">
+          <button
+            onClick={handleOpenAuth}
+            className="py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center space-x-1.5 transition-all active:scale-95 cursor-pointer"
+          >
+            <span>로그인</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={handleOpenAuth}
+            className="py-3.5 bg-white hover:bg-slate-50 text-emerald-700 font-extrabold text-sm rounded-2xl shadow-md border border-emerald-200 flex items-center justify-center space-x-1.5 transition-all active:scale-95 cursor-pointer"
+          >
+            <span>회원가입</span>
+          </button>
+        </div>
 
         <button
           onClick={handleQuickDemo}

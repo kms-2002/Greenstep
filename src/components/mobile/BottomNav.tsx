@@ -1,7 +1,7 @@
 import React from 'react';
 import type { TabType } from '../../context/AppContext';
 import { useApp } from '../../context/AppContext';
-import { Activity, Award, Home, Target, User } from 'lucide-react';
+import { Activity, Award, Home, MessageSquare, Target, User } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { activeTab, setActiveTab } = useApp();
@@ -10,13 +10,14 @@ export const BottomNav: React.FC = () => {
     { id: 'home', label: '홈', icon: <Home className="w-5 h-5" /> },
     { id: 'challenge', label: '챌린지', icon: <Target className="w-5 h-5" /> },
     { id: 'ranking', label: '랭킹', icon: <Award className="w-5 h-5" /> },
+    { id: 'board', label: '커뮤니티', icon: <MessageSquare className="w-5 h-5" /> },
     { id: 'activity', label: '나의 활동', icon: <Activity className="w-5 h-5" /> },
     { id: 'my', label: '마이', icon: <User className="w-5 h-5" /> },
   ];
 
   return (
     <nav className="shrink-0 w-full bg-white/95 backdrop-blur-lg border-t border-slate-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] z-30 select-none">
-      <div className="flex justify-around items-center h-14 px-2">
+      <div className="flex justify-around items-center h-14 px-1">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
@@ -28,7 +29,7 @@ export const BottomNav: React.FC = () => {
               }`}
             >
               {isActive && (
-                <span className="absolute top-0 w-8 h-1 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-b-full shadow-sm shadow-emerald-500/40" />
+                <span className="absolute top-0 w-7 h-1 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-b-full shadow-sm shadow-emerald-500/40" />
               )}
               <div
                 className={`p-0.5 rounded-xl transition-transform duration-200 ${
@@ -37,7 +38,7 @@ export const BottomNav: React.FC = () => {
               >
                 {item.icon}
               </div>
-              <span className={`text-[10px] tracking-tight mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
+              <span className={`text-[9.5px] tracking-tight mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
                 {item.label}
               </span>
             </button>

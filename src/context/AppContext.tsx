@@ -18,7 +18,7 @@ import {
 import { INITIAL_CARBON_FACTORS, calculateTreeInfo } from '../utils/carbonCalculator';
 import confetti from 'canvas-confetti';
 
-export type TabType = 'home' | 'challenge' | 'ranking' | 'activity' | 'my';
+export type TabType = 'home' | 'challenge' | 'ranking' | 'board' | 'activity' | 'my';
 export type ViewMode = 'mobile' | 'admin';
 
 interface CompletionResult {
@@ -76,8 +76,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Updated storage key to force cache invalidation for Jinju City & GNU challenges
-const STORAGE_KEY = 'greenstep_app_state_gnu_v3';
+const STORAGE_KEY = 'greenstep_app_state_gnu_v4';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(() => {
@@ -92,12 +91,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [viewMode, setViewMode] = useState<ViewMode>('mobile');
 
-  // Always initialize or reset with Jinju x GNU challenges
   const [challenges, setChallenges] = useState<Challenge[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_challenges`);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Verify if parsed data contains Jinju challenges, otherwise fallback to INITIAL_CHALLENGES
       if (Array.isArray(parsed) && parsed.some((c: Challenge) => c.title.includes('진주') || c.title.includes('GNU'))) {
         return parsed;
       }
