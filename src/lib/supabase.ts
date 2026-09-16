@@ -1,7 +1,69 @@
-import type { Post, PostComment } from '../types';
+import type { AuthUser, Post, PostComment } from '../types';
 
 // Supabase Mock Client Data Store (Simulates Supabase Client & Server Actions in Next.js App Router)
 const SUPABASE_STORAGE_KEY = 'greenstep_supabase_board_posts_v1';
+const SUPABASE_AUTH_STORAGE_KEY = 'greenstep_supabase_users_v1';
+
+export const INITIAL_AUTH_USERS: AuthUser[] = [
+  {
+    studentId: '20230101',
+    password: '1234',
+    nickname: '지구지키미',
+    university: '경상국립대학교',
+    department: '경영정보학과',
+    grade: '3학년',
+    createdAt: '2026-09-01T00:00:00Z',
+  },
+  {
+    studentId: '20230102',
+    password: '1234',
+    nickname: '박지구',
+    university: '경상국립대학교',
+    department: '경영학부',
+    grade: '2학년',
+    createdAt: '2026-09-02T00:00:00Z',
+  },
+];
+
+export const supabaseAuth = {
+  getUsers: (): AuthUser[] => {
+    const saved = localStorage.getItem(SUPABASE_AUTH_STORAGE_KEY);
+    if (!saved) {
+      localStorage.setItem(SUPABASE_AUTH_STORAGE_KEY, JSON.stringify(INITIAL_AUTH_USERS));
+      return INITIAL_AUTH_USERS;
+    }
+    return JSON.parse(saved);
+  },
+
+  signUp: (userData: Omit<AuthUser, 'createdAt'>): { success: boolean; message: string; user?: AuthUser } => {
+    const users = supabaseAuth.getUsers();
+    const existing = users.find((u) => u.studentId.trim() === userData.studentId.trim());
+    if (existing) {
+      return { success: false, message: '이미 가입된 학번입니다. 로그인 탭을 이용해 주세요.' };
+    }
+    const newUser: AuthUser = {
+      ...userData,
+      studentId: userData.studentId.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [...users, newUser];
+    localStorage.setItem(SUPABASE_AUTH_STORAGE_KEY, JSON.stringify(updated));
+    return { success: true, message: 'Supabase DB 회원가입이 완료되었습니다!', user: newUser };
+  },
+
+  signIn: (studentId: string, password?: string): { success: boolean; message: string; user?: AuthUser } => {
+    const users = supabaseAuth.getUsers();
+    const target = users.find((u) => u.studentId.trim() === studentId.trim());
+    if (!target) {
+      return { success: false, message: '등록되지 않은 학번입니다. 회원가입 후 이용해주세요.' };
+    }
+    if (password !== undefined && target.password && target.password !== password) {
+      return { success: false, message: '비밀번호가 일치하지 않습니다.' };
+    }
+    return { success: true, message: '로그인 성공!', user: target };
+  },
+};
+
 
 export const INITIAL_POSTS: Post[] = [
   {

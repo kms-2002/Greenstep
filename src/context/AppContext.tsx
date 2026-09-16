@@ -59,9 +59,11 @@ interface AppContextType {
 
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
+  authInitialTab: 'login' | 'signup';
+  openAuthModal: (tab?: 'login' | 'signup') => void;
 
   // Actions
-  login: (nickname: string, university: string, department: string, grade: string) => void;
+  login: (nickname: string, university: string, department: string, grade: string, studentId?: string) => void;
   logout: () => void;
   updateProfile: (updated: Partial<User>) => void;
   joinChallenge: (challengeId: string) => void;
@@ -155,6 +157,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [completionResult, setCompletionResult] = useState<CompletionResult | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authInitialTab, setAuthInitialTab] = useState<'login' | 'signup'>('signup');
+
+  const openAuthModal = (tab: 'login' | 'signup' = 'signup') => {
+    setAuthInitialTab(tab);
+    setIsAuthModalOpen(true);
+  };
 
   // Save to LocalStorage
   useEffect(() => {
@@ -213,13 +221,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   }, [user.totalCarbonReduction, user.nickname, user.department, user.points]);
 
-  const login = (nickname: string, university: string, department: string, grade: string) => {
+  const login = (nickname: string, university: string, department: string, grade: string, studentId?: string) => {
     setUser((prev) => ({
       ...prev,
       nickname,
       university,
       department,
       grade,
+      studentId: studentId || prev.studentId || '20230101',
     }));
     setIsAuthenticated(true);
     setIsAuthModalOpen(false);
@@ -420,6 +429,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         isAuthModalOpen,
         setIsAuthModalOpen,
+        authInitialTab,
+        openAuthModal,
 
         login,
         logout,

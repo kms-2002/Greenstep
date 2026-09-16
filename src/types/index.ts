@@ -2,6 +2,7 @@ export type ChallengeCategory = 'all' | 'transport' | 'life' | 'food' | 'resourc
 
 export interface User {
   id: string;
+  studentId?: string;
   nickname: string;
   university: string;
   department: string;
@@ -15,6 +16,17 @@ export interface User {
   lastActiveDate: string; // YYYY-MM-DD
   profileImage?: string;
 }
+
+export interface AuthUser {
+  studentId: string;
+  password?: string;
+  nickname: string;
+  university: string;
+  department: string;
+  grade: string;
+  createdAt: string;
+}
+
 
 export interface Challenge {
   id: string;

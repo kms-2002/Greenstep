@@ -3,14 +3,10 @@ import { useApp } from '../../context/AppContext';
 import { ArrowRight, Leaf, Trophy, TreePine, Zap } from 'lucide-react';
 
 export const LandingScreen: React.FC = () => {
-  const { setIsAuthModalOpen, login } = useApp();
-
-  const handleOpenAuth = () => {
-    setIsAuthModalOpen(true);
-  };
+  const { openAuthModal, login } = useApp();
 
   const handleQuickDemo = () => {
-    login('지구지키미', '경상국립대학교', '경영정보학과', '3학년');
+    login('지구지키미', '경상국립대학교', '경영정보학과', '3학년', '20230101');
   };
 
   return (
@@ -91,7 +87,7 @@ export const LandingScreen: React.FC = () => {
       <div className="space-y-2 relative z-30 pt-1">
         <div className="grid grid-cols-2 gap-2.5">
           <button
-            onClick={handleOpenAuth}
+            onClick={() => openAuthModal('login')}
             className="py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center space-x-1.5 transition-all active:scale-95 cursor-pointer"
           >
             <span>로그인</span>
@@ -99,7 +95,7 @@ export const LandingScreen: React.FC = () => {
           </button>
 
           <button
-            onClick={handleOpenAuth}
+            onClick={() => openAuthModal('signup')}
             className="py-3.5 bg-white hover:bg-slate-50 text-emerald-700 font-extrabold text-sm rounded-2xl shadow-md border border-emerald-200 flex items-center justify-center space-x-1.5 transition-all active:scale-95 cursor-pointer"
           >
             <span>회원가입</span>
