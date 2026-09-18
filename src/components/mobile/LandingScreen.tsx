@@ -1,13 +1,9 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { ArrowRight, Leaf, Trophy, TreePine, Zap, RotateCcw, Sparkles } from 'lucide-react';
+import { ArrowRight, Leaf, Trophy, TreePine, Zap, RotateCcw } from 'lucide-react';
 
 export const LandingScreen: React.FC = () => {
-  const { openAuthModal, login } = useApp();
-
-  const handleQuickDemo = () => {
-    login('지구지키미', '경상국립대학교', '경영정보학과', '3학년', '20230101');
-  };
+  const { openAuthModal } = useApp();
 
   const handleReset = () => {
     window.location.reload();
@@ -103,7 +99,7 @@ export const LandingScreen: React.FC = () => {
       </div>
 
       {/* Bottom Section - Login & Signup Buttons */}
-      <div className="space-y-2 relative z-30 pt-1">
+      <div className="relative z-30 pt-1">
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => openAuthModal('login')}
@@ -120,14 +116,6 @@ export const LandingScreen: React.FC = () => {
             <span>회원가입</span>
           </button>
         </div>
-
-        <button
-          onClick={handleQuickDemo}
-          className="w-full py-2 text-center text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center gap-1"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>경상국립대 학생으로 바로 체험하기</span>
-        </button>
       </div>
     </div>
   );
