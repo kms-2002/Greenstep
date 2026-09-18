@@ -17,28 +17,28 @@ export const LandingScreen: React.FC = () => {
       {/* Top Section - Text from User's First Prompt */}
       <div className="pt-2 space-y-2.5 relative z-10">
         {/* Brand Tag & Subtitle */}
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-300 flex items-center justify-center shadow-md">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8.5 h-8.5 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-300 flex items-center justify-center shadow-xs">
             <Leaf className="w-4.5 h-4.5 text-emerald-950 stroke-[2.5]" />
           </div>
           <div>
-            <span className="text-xs font-black tracking-widest text-emerald-700 uppercase font-mono block">
+            <span className="text-xs font-bold tracking-tight text-emerald-800 uppercase block font-sans">
               GreenStep
             </span>
-            <span className="text-[10px] text-slate-500 font-bold block -mt-0.5">
-              "작은 실천이 만드는 큰 변화"
+            <span className="text-[11px] text-slate-500 font-medium block">
+              작은 실천이 만드는 큰 변화
             </span>
           </div>
         </div>
 
-        {/* Main Title & Slogan from Prompt 1 */}
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-snug">
+        {/* Main Title & Slogan */}
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-snug">
           작은 실천이 만드는 <br />
           <span className="text-emerald-600">큰 변화</span> 🌱
         </h1>
 
-        {/* Description from First Prompt */}
-        <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+        {/* Description */}
+        <p className="text-xs text-slate-600 font-normal leading-relaxed">
           일상생활에서 실천할 수 있는 친환경 행동에 참여하고 인증하여 탄소절감량과 포인트를 얻고, 개인 및 학과별 랭킹을 통해 지속적으로 동참해보세요!
         </p>
       </div>

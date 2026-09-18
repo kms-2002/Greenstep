@@ -77,42 +77,42 @@ export const HomeTab: React.FC = () => {
   return (
     <div className="p-4 space-y-4 pb-24 animate-fadeIn select-none">
 
-      {/* 1. User Greeting & Live Counter Pill (Carbon Pay Style Header) */}
-      <div className="space-y-1.5 pt-1">
-        <h2 className="text-xl font-black text-slate-900 tracking-tight font-sans">
+      {/* 1. User Greeting & Live Counter Pill */}
+      <div className="space-y-1 pt-1">
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight font-sans">
           <span className="text-slate-900">{user.nickname}</span>님, 안녕하세요
         </h2>
 
         <div className="flex items-center space-x-1 text-xs">
-          <span className="text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-200/70 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-xs">
+          <span className="text-emerald-700 font-bold bg-emerald-50 border border-emerald-200/70 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
             <span>녹색생활 1,504,824 참여중</span>
           </span>
         </div>
       </div>
 
-      {/* 2. Main Promotional Pink Banner Card (카본페이 메인 파스텔 배너 카드) */}
-      <div className={`p-4.5 rounded-2xl border shadow-sm relative overflow-hidden transition-all duration-300 ${banners[currentBanner].bg}`}>
+      {/* 2. Main Promotional Pink Banner Card */}
+      <div className={`p-4 rounded-2xl border shadow-xs relative overflow-hidden transition-all duration-300 ${banners[currentBanner].bg}`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
-            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${banners[currentBanner].badgeBg}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${banners[currentBanner].badgeBg}`}>
               {banners[currentBanner].tag}
             </span>
-            <span className="text-[10px] font-bold opacity-75">
+            <span className="text-[10px] font-medium opacity-80">
               {banners[currentBanner].date}
             </span>
           </div>
 
-          {/* Banner Page Counter (1/3) */}
+          {/* Banner Page Counter */}
           <button
             onClick={() => setCurrentBanner((prev) => (prev + 1) % banners.length)}
-            className="text-[10px] font-bold bg-white/70 backdrop-blur-xs px-2 py-0.5 rounded-full opacity-80 hover:opacity-100 cursor-pointer"
+            className="text-[10px] font-bold bg-white/80 backdrop-blur-xs px-2 py-0.5 rounded-full opacity-90 hover:opacity-100 cursor-pointer"
           >
             {currentBanner + 1} / {banners.length} {'>'}
           </button>
         </div>
 
-        <h3 className="text-sm font-black tracking-tight leading-snug pr-6 font-sans">
+        <h3 className="text-sm font-bold tracking-tight leading-snug pr-6 font-sans">
           {banners[currentBanner].title}
         </h3>
 
@@ -130,44 +130,44 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Eco Practice Dashboard Card (녹색생활실천 메인 카드 - 카본페이 디자인) */}
-      <div className="bg-[#EBF7EB] border border-emerald-200/80 rounded-3xl p-5 shadow-xs relative overflow-hidden">
+      {/* 3. Eco Practice Dashboard Card */}
+      <div className="bg-[#EAF5E9] border border-emerald-200/80 rounded-3xl p-4.5 shadow-xs relative overflow-hidden">
         {/* Top Header inside Dashboard Card */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-black text-emerald-900 tracking-tight flex items-center gap-1.5">
+        <div className="flex items-center justify-between mb-3.5">
+          <h3 className="text-base font-bold text-emerald-950 tracking-tight flex items-center gap-1.5">
             <span>녹색생활실천</span>
           </h3>
 
           {/* Cute Coffee / Tumbler Illustration Icon */}
-          <div className="w-10 h-10 rounded-2xl bg-white/90 shadow-sm border border-emerald-200 flex items-center justify-center relative">
-            <Coffee className="w-5 h-5 text-emerald-600" />
+          <div className="w-9 h-9 rounded-2xl bg-white/90 shadow-xs border border-emerald-200 flex items-center justify-center relative">
+            <Coffee className="w-4.5 h-4.5 text-emerald-600" />
             <Sparkles className="w-3 h-3 text-amber-500 absolute -top-1 -right-1 animate-pulse" />
           </div>
         </div>
 
         {/* 3 Metric Columns: 실천건수 / 상세건수 / 지급예정포인트 */}
-        <div className="grid grid-cols-3 gap-2 pt-1 text-center bg-white/70 backdrop-blur-xs rounded-2xl p-3 border border-emerald-100">
+        <div className="grid grid-cols-3 gap-2 pt-1 text-center bg-white/80 backdrop-blur-xs rounded-2xl p-3 border border-emerald-100/90 shadow-xs">
           {/* Item 1 */}
           <div className="space-y-0.5">
-            <span className="text-[11px] font-bold text-slate-500 block">실천건수</span>
-            <div className="text-base font-black text-slate-900 font-mono">
-              {participations.length} <span className="text-xs font-bold text-slate-500">건</span>
+            <span className="text-[11px] font-semibold text-slate-500 block">실천건수</span>
+            <div className="text-base font-bold text-slate-900">
+              {participations.length} <span className="text-xs font-medium text-slate-500">건</span>
             </div>
           </div>
 
           {/* Item 2 */}
           <div className="space-y-0.5 border-x border-slate-200/60">
-            <span className="text-[11px] font-bold text-slate-500 block">상세건수</span>
-            <div className="text-base font-black text-slate-900 font-mono">
-              {user.todayCarbonReduction.toFixed(1)} <span className="text-[10px] font-bold text-slate-500">(km/kg)</span>
+            <span className="text-[11px] font-semibold text-slate-500 block">상세건수</span>
+            <div className="text-base font-bold text-slate-900">
+              {user.todayCarbonReduction.toFixed(1)} <span className="text-[10px] font-medium text-slate-500">(km/kg)</span>
             </div>
           </div>
 
           {/* Item 3 */}
           <div className="space-y-0.5">
-            <span className="text-[11px] font-bold text-slate-500 block">지급예정포인트</span>
-            <div className="text-base font-black text-emerald-700 font-mono">
-              {user.points.toLocaleString()} <span className="text-xs font-bold text-emerald-600">P</span>
+            <span className="text-[11px] font-semibold text-slate-500 block">지급예정포인트</span>
+            <div className="text-base font-bold text-emerald-700">
+              {user.points.toLocaleString()} <span className="text-xs font-semibold text-emerald-600">P</span>
             </div>
           </div>
         </div>
