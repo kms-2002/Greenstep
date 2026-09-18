@@ -90,17 +90,13 @@ export const LandingScreen: React.FC = () => {
 
           {/* 
             Center Jinu Mascot Image 
-            Clipped with circular mask (clipPath circle 42%) to 100% eliminate grey/white checkerboard transparency artifacts!
+            Pure transparent PNG with zero background grid artifacts (Full body uncropped)
           */}
-          <div className="relative z-10 w-44 h-44 rounded-full overflow-hidden flex items-center justify-center bg-[#E8F6FA]">
+          <div className="relative z-10 w-52 h-52 flex items-center justify-center">
             <img
-              src="/jinu_transparent.jpg"
+              src="/jinu_clean.png"
               alt="GreenStep 마스코트 지누"
-              className="w-full h-full object-cover scale-125 drop-shadow-md transition-transform duration-300"
-              style={{
-                clipPath: 'circle(42% at 50% 50%)',
-                WebkitClipPath: 'circle(42% at 50% 50%)',
-              }}
+              className="w-full h-full object-contain drop-shadow-xl hover:scale-105 transition-transform duration-300"
             />
           </div>
         </div>
