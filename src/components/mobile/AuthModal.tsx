@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { supabaseAuth } from '../../lib/supabase';
-import { Leaf, GraduationCap, UserCheck, Sparkles, X, Building, Lock, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Leaf, GraduationCap, UserCheck, Sparkles, X, Building, Lock, KeyRound, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setIsAuthModalOpen, authInitialTab, login } = useApp();
@@ -128,13 +128,23 @@ export const AuthModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
       <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col relative animate-scaleUp">
-        {/* Close Button */}
-        <button
-          onClick={() => setIsAuthModalOpen(false)}
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-100/80 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Top Header Buttons: "처음으로" pill on left, X close on right */}
+        <div className="absolute top-4 inset-x-4 z-10 flex items-center justify-between pointer-events-none">
+          <button
+            onClick={() => setIsAuthModalOpen(false)}
+            className="pointer-events-auto px-2.5 py-1 bg-white/80 hover:bg-white text-slate-700 rounded-full text-xs font-bold shadow-xs border border-white/60 flex items-center space-x-1 transition-all active:scale-95 cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-slate-600" />
+            <span>처음으로</span>
+          </button>
+
+          <button
+            onClick={() => setIsAuthModalOpen(false)}
+            className="pointer-events-auto w-8 h-8 rounded-full bg-slate-900/40 hover:bg-slate-900/60 flex items-center justify-center text-white transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Header Banner */}
         <div className="bg-gradient-to-br from-emerald-800 via-teal-800 to-slate-900 text-white p-6 text-center relative overflow-hidden">
