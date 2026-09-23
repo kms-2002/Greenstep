@@ -13,7 +13,7 @@ export const INITIAL_USER: User = {
   weekCarbonReduction: 8.4,
   consecutiveDays: 5,
   lastActiveDate: new Date().toISOString().split('T')[0],
-  profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
+  profileAvatarId: 'avatar-jinu',
 };
 
 // Jinju City & Gyeongsang National University (GNU) Specific Eco Challenges
@@ -228,13 +228,13 @@ export const INITIAL_CHALLENGES: Challenge[] = [
 
 // Personal Ranks with GNU Students
 export const INITIAL_PERSONAL_RANKS: PersonalRank[] = [
-  { rank: 1, userId: 'u-101', nickname: '지구지키미', university: '경상국립대학교', department: '경영정보학과', carbonReduction: 42.8, points: 1240, isCurrentUser: true, avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250' },
-  { rank: 2, userId: 'u-102', nickname: '박지구', university: '경상국립대학교', department: '경영학부', carbonReduction: 38.2, points: 1120, avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250' },
-  { rank: 3, userId: 'u-103', nickname: '이세이버', university: '경상국립대학교', department: '회계세무학부', carbonReduction: 35.7, points: 980, avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250' },
-  { rank: 4, userId: 'u-104', nickname: '최에코', university: '경상국립대학교', department: '스마트유통물류학과', carbonReduction: 31.4, points: 890, avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250' },
-  { rank: 5, userId: 'u-105', nickname: '정클린', university: '경상국립대학교', department: '국제통상학과', carbonReduction: 29.1, points: 810, avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=250' },
-  { rank: 6, userId: 'u-106', nickname: '강그린', university: '경상국립대학교', department: '경영정보학과', carbonReduction: 26.5, points: 740, avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250' },
-  { rank: 7, userId: 'u-107', nickname: '윤텀블', university: '경상국립대학교', department: '경영학부', carbonReduction: 24.3, points: 680, avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=250' },
+  { rank: 1, userId: 'u-101', nickname: '지구지키미', university: '경상국립대학교', department: '경영정보학과', carbonReduction: 42.8, points: 1240, isCurrentUser: true, avatarUrl: 'avatar-jinu' },
+  { rank: 2, userId: 'u-102', nickname: '박지구', university: '경상국립대학교', department: '경영학부', carbonReduction: 38.2, points: 1120, avatarUrl: 'avatar-sprout' },
+  { rank: 3, userId: 'u-103', nickname: '이세이버', university: '경상국립대학교', department: '회계세무학부', carbonReduction: 35.7, points: 980, avatarUrl: 'avatar-tumbler' },
+  { rank: 4, userId: 'u-104', nickname: '최에코', university: '경상국립대학교', department: '스마트유통물류학과', carbonReduction: 31.4, points: 890, avatarUrl: 'avatar-rider' },
+  { rank: 5, userId: 'u-105', nickname: '정클린', university: '경상국립대학교', department: '국제통상학과', carbonReduction: 29.1, points: 810, avatarUrl: 'avatar-tree' },
+  { rank: 6, userId: 'u-106', nickname: '강그린', university: '경상국립대학교', department: '경영정보학과', carbonReduction: 26.5, points: 740, avatarUrl: 'avatar-sprout' },
+  { rank: 7, userId: 'u-107', nickname: '윤텀블', university: '경상국립대학교', department: '경영학부', carbonReduction: 24.3, points: 680, avatarUrl: 'avatar-tumbler' },
 ];
 
 // GNU Business College 5 Departments Ranks

@@ -15,6 +15,7 @@ export interface User {
   consecutiveDays: number;
   lastActiveDate: string; // YYYY-MM-DD
   profileImage?: string;
+  profileAvatarId?: string;
 }
 
 export interface AuthUser {
@@ -24,8 +25,57 @@ export interface AuthUser {
   university: string;
   department: string;
   grade: string;
+  profileAvatarId?: string;
   createdAt: string;
 }
+
+export interface AvatarOption {
+  id: string;
+  name: string;
+  icon: string;
+  bgColor: string;
+  textColor: string;
+  image?: string;
+}
+
+export const CUTE_AVATARS: AvatarOption[] = [
+  {
+    id: 'avatar-jinu',
+    name: '지누 마스코트',
+    icon: '🦖',
+    bgColor: 'bg-[#EBF7F4] border-teal-200',
+    textColor: 'text-teal-700',
+    image: '/jinu_clean.png',
+  },
+  {
+    id: 'avatar-sprout',
+    name: '새싹 지킴이',
+    icon: '🌱',
+    bgColor: 'bg-emerald-50 border-emerald-200',
+    textColor: 'text-emerald-700',
+  },
+  {
+    id: 'avatar-tumbler',
+    name: '텀블러 마스터',
+    icon: '☕',
+    bgColor: 'bg-amber-50 border-amber-200',
+    textColor: 'text-amber-700',
+  },
+  {
+    id: 'avatar-rider',
+    name: '에코 라이더',
+    icon: '🚲',
+    bgColor: 'bg-sky-50 border-sky-200',
+    textColor: 'text-sky-700',
+  },
+  {
+    id: 'avatar-tree',
+    name: '숲 가꾸기',
+    icon: '🌲',
+    bgColor: 'bg-green-50 border-green-200',
+    textColor: 'text-green-700',
+  },
+];
 
 
 export interface Challenge {

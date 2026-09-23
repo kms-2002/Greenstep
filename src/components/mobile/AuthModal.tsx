@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { supabaseAuth } from '../../lib/supabase';
-import { Leaf, GraduationCap, UserCheck, Sparkles, X, Building, Lock, KeyRound, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react';
+import { CUTE_AVATARS } from '../../types';
+import { Leaf, GraduationCap, UserCheck, Sparkles, X, Building, Lock, KeyRound, CheckCircle2, AlertCircle, RotateCcw, Smile } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setIsAuthModalOpen, authInitialTab, login } = useApp();
@@ -16,6 +17,7 @@ export const AuthModal: React.FC = () => {
   const [university, setUniversity] = useState('경상국립대학교');
   const [department, setDepartment] = useState('경영정보학과');
   const [grade, setGrade] = useState('3학년');
+  const [selectedAvatarId, setSelectedAvatarId] = useState('avatar-jinu');
 
   // Error / Success Feedback State
   const [errorMessage, setErrorMessage] = useState('');
@@ -79,6 +81,7 @@ export const AuthModal: React.FC = () => {
         university,
         department,
         grade,
+        profileAvatarId: selectedAvatarId,
       });
 
       if (!res.success) {
@@ -88,7 +91,7 @@ export const AuthModal: React.FC = () => {
 
       setSuccessMessage('Supabase DB에 회원가입 정보가 기록되었습니다!');
       setTimeout(() => {
-        login(nickname.trim(), university, department, grade, studentId.trim());
+        login(nickname.trim(), university, department, grade, studentId.trim(), selectedAvatarId);
       }, 700);
 
     } else {
@@ -118,7 +121,8 @@ export const AuthModal: React.FC = () => {
             registeredUser.university,
             registeredUser.department,
             registeredUser.grade,
-            registeredUser.studentId
+            registeredUser.studentId,
+            registeredUser.profileAvatarId
           );
         }, 500);
       }
@@ -253,6 +257,41 @@ export const AuthModal: React.FC = () => {
           {/* Signup Specific Fields */}
           {isSignup && (
             <>
+              {/* 5 Cute Eco Avatar Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+                  <Smile className="w-3.5 h-3.5 text-emerald-600" />
+                  프로필 캐릭터 아이콘 선택 (5종)
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {CUTE_AVATARS.map((av) => {
+                    const isSelected = selectedAvatarId === av.id;
+                    return (
+                      <button
+                        key={av.id}
+                        type="button"
+                        onClick={() => setSelectedAvatarId(av.id)}
+                        className={`p-2 rounded-2xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/30 shadow-xs scale-105'
+                            : 'bg-slate-50 border-slate-200 opacity-70 hover:opacity-100 hover:bg-white'
+                        }`}
+                        title={av.name}
+                      >
+                        {av.image ? (
+                          <img src={av.image} alt={av.name} className="w-7 h-7 object-contain" />
+                        ) : (
+                          <span className="text-xl leading-none">{av.icon}</span>
+                        )}
+                        <span className="text-[9px] font-bold text-slate-700 mt-1 truncate w-full text-center">
+                          {av.name.split(' ')[0]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Password Confirm */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">

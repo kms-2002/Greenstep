@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
+import { Avatar } from '../../common/Avatar';
 import { Award, Trophy, Users, Sparkles, Building2, Flame } from 'lucide-react';
 
 export const RankingTab: React.FC = () => {
@@ -188,13 +189,7 @@ export const RankingTab: React.FC = () => {
                   {item.rank}
                 </span>
 
-                <div className="w-9 h-9 rounded-xl bg-slate-100 overflow-hidden shrink-0">
-                  {item.avatarUrl ? (
-                    <img src={item.avatarUrl} alt={item.nickname} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="flex items-center justify-center h-full text-xs">🌱</span>
-                  )}
-                </div>
+                <Avatar avatarId={item.avatarUrl || 'avatar-jinu'} size="sm" />
 
                 <div>
                   <div className="flex items-center space-x-1.5">

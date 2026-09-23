@@ -63,7 +63,7 @@ interface AppContextType {
   openAuthModal: (tab?: 'login' | 'signup') => void;
 
   // Actions
-  login: (nickname: string, university: string, department: string, grade: string, studentId?: string) => void;
+  login: (nickname: string, university: string, department: string, grade: string, studentId?: string, avatarId?: string) => void;
   logout: () => void;
   updateProfile: (updated: Partial<User>) => void;
   joinChallenge: (challengeId: string) => void;
@@ -221,7 +221,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   }, [user.totalCarbonReduction, user.nickname, user.department, user.points]);
 
-  const login = (nickname: string, university: string, department: string, grade: string, studentId?: string) => {
+  const login = (nickname: string, university: string, department: string, grade: string, studentId?: string, avatarId?: string) => {
     setUser((prev) => ({
       ...prev,
       nickname,
@@ -229,6 +229,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       department,
       grade,
       studentId: studentId || prev.studentId || '20230101',
+      profileAvatarId: avatarId || prev.profileAvatarId || 'avatar-jinu',
     }));
     setIsAuthenticated(true);
     setIsAuthModalOpen(false);

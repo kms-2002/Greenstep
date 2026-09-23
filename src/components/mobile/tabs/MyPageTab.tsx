@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
+import { Avatar } from '../../common/Avatar';
+import { CUTE_AVATARS } from '../../../types';
 import {
   Award,
   Bell,
@@ -11,13 +13,15 @@ import {
   Settings,
   Shield,
   Target,
-  User,
   Zap,
+  Smile,
+  X,
 } from 'lucide-react';
 
 export const MyPageTab: React.FC = () => {
-  const { user, badges, logout, setIsAuthModalOpen, resetAllData } = useApp();
+  const { user, badges, logout, updateProfile, resetAllData } = useApp();
   const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const unlockedCount = badges.filter((b) => b.unlockedAt).length;
 
@@ -26,12 +30,16 @@ export const MyPageTab: React.FC = () => {
       {/* Profile Card Header */}
       <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white p-5 rounded-3xl shadow-lg relative overflow-hidden">
         <div className="relative z-10 flex items-center space-x-4">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-700/80 border-2 border-emerald-400 overflow-hidden shrink-0 shadow-md flex items-center justify-center">
-            {user.profileImage ? (
-              <img src={user.profileImage} alt={user.nickname} className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-8 h-8 text-emerald-200" />
-            )}
+          {/* Avatar Icon with Edit Button */}
+          <div
+            onClick={() => setShowAvatarPicker(true)}
+            className="relative cursor-pointer group"
+            title="프로필 아이콘 변경"
+          >
+            <Avatar avatarId={user.profileAvatarId || 'avatar-jinu'} size="xl" className="ring-2 ring-emerald-400" />
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center border border-white text-white text-[10px] shadow-sm">
+              ✏️
+            </div>
           </div>
 
           <div className="flex-1 min-w-0">
@@ -105,7 +113,7 @@ export const MyPageTab: React.FC = () => {
       {/* Main Settings & Info Menu List */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-100">
         <button
-          onClick={() => setIsAuthModalOpen(true)}
+          onClick={() => setShowAvatarPicker(true)}
           className="w-full p-3.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors"
         >
           <div className="flex items-center space-x-3">
@@ -227,6 +235,58 @@ export const MyPageTab: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Avatar Picker Modal */}
+      {showAvatarPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl border border-slate-100 p-5 space-y-4 animate-scaleUp relative">
+            <button
+              onClick={() => setShowAvatarPicker(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-2 text-emerald-600 font-extrabold">
+              <Smile className="w-5 h-5" />
+              <h3 className="text-base text-slate-900">프로필 캐릭터 아이콘 변경 (5종)</h3>
+            </div>
+            <p className="text-xs text-slate-500">원하시는 귀여운 친환경 캐릭터 아이콘을 선택해주세요.</p>
+
+            <div className="grid grid-cols-5 gap-2 pt-1">
+              {CUTE_AVATARS.map((av) => {
+                const isSelected = (user.profileAvatarId || 'avatar-jinu') === av.id;
+                return (
+                  <button
+                    key={av.id}
+                    onClick={() => {
+                      updateProfile({ profileAvatarId: av.id });
+                      setShowAvatarPicker(false);
+                    }}
+                    className={`p-2 rounded-2xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/30 shadow-xs scale-105'
+                        : 'bg-slate-50 border-slate-200 opacity-70 hover:opacity-100 hover:bg-white'
+                    }`}
+                  >
+                    <Avatar avatarId={av.id} size="md" />
+                    <span className="text-[9px] font-bold text-slate-700 mt-1 truncate w-full text-center">
+                      {av.name.split(' ')[0]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setShowAvatarPicker(false)}
+              className="w-full py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl cursor-pointer"
+            >
+              완료
+            </button>
           </div>
         </div>
       )}
