@@ -134,10 +134,7 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. NEW: Virtual Carbon Tree (탄소나무 홈 화면 직접 연동) */}
-      <VirtualTree totalCarbon={user.totalCarbonReduction} />
-
-      {/* 4. Activity Stats 4 Grid Summary (활동 요약 메트릭) */}
+      {/* 3. Activity Stats 4 Grid Summary (활동 요약 메트릭) */}
       <div className="grid grid-cols-2 gap-3">
         <div className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-xs">
           <span className="text-xs text-slate-500 font-bold block mb-1">누적 탄소절감량</span>
@@ -185,7 +182,7 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Eco Practice Dashboard Card */}
+      {/* 4. Eco Practice Dashboard Card */}
       <div className="bg-[#EAF5E9] border border-emerald-200/80 rounded-3xl p-4.5 shadow-xs relative overflow-hidden">
         {/* Top Header inside Dashboard Card */}
         <div className="flex items-center justify-between mb-3.5">
@@ -228,7 +225,7 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 6. Quick Action 8 Grid Icon Buttons */}
+      {/* 5. Quick Action 8 Grid Icon Buttons */}
       <div className="grid grid-cols-4 gap-2.5 pt-1">
         {/* Button 1: 매장찾기 */}
         <button
@@ -319,7 +316,7 @@ export const HomeTab: React.FC = () => {
         </button>
       </div>
 
-      {/* 7. 나의 최근 실천 활동 LIVE 피드 */}
+      {/* 6. 나의 최근 실천 활동 LIVE 피드 */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800 tracking-tight flex items-center gap-1.5">
@@ -394,7 +391,7 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 8. Weekly Activity Graph */}
+      {/* 7. Weekly Activity Graph */}
       <div className="p-4.5 bg-white rounded-2xl border border-slate-100 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-slate-800">이번 주 탄소절감 활동</h3>
@@ -414,6 +411,11 @@ export const HomeTab: React.FC = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* 8. Virtual Carbon Tree (나의 탄소나무를 홈 화면 하단에 배치) */}
+      <div className="pt-2">
+        <VirtualTree totalCarbon={user.totalCarbonReduction} />
       </div>
 
       {/* Quick Action Interactive Modals */}
