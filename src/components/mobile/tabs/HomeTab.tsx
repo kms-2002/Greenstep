@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
-import { generateRecommendation } from '../../../utils/carbonCalculator';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import {
   MapPin,
@@ -15,10 +14,14 @@ import {
   Coffee,
   Sparkles,
   X,
+  CheckCircle2,
+  Clock,
+  Leaf,
+  Zap,
 } from 'lucide-react';
 
 export const HomeTab: React.FC = () => {
-  const { user, challenges, participations, setSelectedChallenge, setActiveTab } = useApp();
+  const { user, challenges, participations, setActiveTab } = useApp();
 
   // Banner carousel index state (1/3)
   const [currentBanner, setCurrentBanner] = useState(0);
@@ -53,9 +56,6 @@ export const HomeTab: React.FC = () => {
     },
   ];
 
-  const recommendationInfo = generateRecommendation(participations, challenges);
-  const recommendedList = challenges.filter((c) => c.isRecommended || c.isPopular).slice(0, 2);
-
   const weeklyData = [
     { day: '월', carbon: 0.8 },
     { day: '화', carbon: 1.4 },
@@ -73,6 +73,9 @@ export const HomeTab: React.FC = () => {
     { name: '진주 남강 공공자전거 대여소 (가좌)', type: '대중교통 자전거 포인트', dist: '300m' },
     { name: '경상국립대 칠암캠 혜람관 카페', type: '텀블러 지참 200원 할인', dist: '칠암캠' },
   ];
+
+  // User's Completed Activities Feed
+  const completedParticipations = participations.filter((p) => p.status === 'completed');
 
   return (
     <div className="p-4 space-y-4 pb-24 animate-fadeIn select-none">
@@ -151,7 +154,7 @@ export const HomeTab: React.FC = () => {
           <div className="space-y-0.5">
             <span className="text-[11px] font-semibold text-slate-500 block">실천건수</span>
             <div className="text-base font-bold text-slate-900">
-              {participations.length} <span className="text-xs font-medium text-slate-500">건</span>
+              {completedParticipations.length} <span className="text-xs font-medium text-slate-500">건</span>
             </div>
           </div>
 
@@ -173,7 +176,7 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Quick Action 8 Grid Icon Buttons (카본페이 하단 8개 깔끔한 버튼 카테고리) */}
+      {/* 4. Quick Action 8 Grid Icon Buttons */}
       <div className="grid grid-cols-4 gap-2.5 pt-1">
         {/* Button 1: 매장찾기 */}
         <button
@@ -264,85 +267,89 @@ export const HomeTab: React.FC = () => {
         </button>
       </div>
 
-      {/* AI Recommendation Banner */}
-      <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200/80 flex items-start space-x-3 shadow-xs">
-        <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-md shrink-0">
-          <Sparkles className="w-4 h-4" />
-        </div>
-        <div className="flex-1 text-xs">
-          <span className="font-bold text-emerald-950 block">AI 맞춤형 챌린지 추천</span>
-          <p className="text-emerald-800 text-[11px] mt-0.5">
-            "{user.nickname}님은 {recommendationInfo.reason}"
-          </p>
-        </div>
-      </div>
-
-      {/* Today's Recommended Challenges */}
+      {/* 5. NEW: 나의 최근 실천 활동 (My Activity Feed Linked Directly to Home) */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800 tracking-tight flex items-center gap-1.5">
-            <span>오늘의 추천 챌린지</span>
-            <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-              HOT
+            <span>나의 최근 실천 활동</span>
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+              LIVE
             </span>
           </h3>
           <button
-            onClick={() => setActiveTab('challenge')}
+            onClick={() => setActiveTab('activity')}
             className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center cursor-pointer"
           >
-            <span>전체보기</span>
+            <span>전체 보고서</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-3">
-          {recommendedList.map((ch) => (
-            <div
-              key={ch.id}
-              onClick={() => setSelectedChallenge(ch)}
-              className="p-4 bg-white rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between space-y-3"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 bg-slate-100">
-                    <img src={ch.imageUrl} alt={ch.title} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-800 flex items-center gap-1">
-                      <span>{ch.categoryIcon}</span>
-                      <span>{ch.title}</span>
-                    </h4>
-                    <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{ch.description}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                <div className="flex items-center space-x-3 font-mono font-medium">
-                  <span className="text-emerald-700">
-                    예상 절감: <b>{ch.carbonReduction.toFixed(1)}kg</b>
-                  </span>
-                  <span className="text-amber-600">
-                    보상: <b>+{ch.rewardPoints}P</b>
-                  </span>
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedChallenge(ch);
-                  }}
-                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-transform active:scale-95 cursor-pointer"
-                >
-                  도전하기
-                </button>
-              </div>
+        <div className="space-y-2.5">
+          {completedParticipations.length === 0 ? (
+            <div className="p-6 bg-white rounded-2xl border border-slate-100 text-center space-y-2 shadow-xs">
+              <Leaf className="w-8 h-8 text-emerald-400 mx-auto" />
+              <p className="text-xs font-bold text-slate-700">아직 인증된 실천 활동이 없습니다.</p>
+              <p className="text-[11px] text-slate-400">첫 챌린지에 도전하고 탄소 포인트를 받아보세요!</p>
+              <button
+                onClick={() => setActiveTab('challenge')}
+                className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer hover:bg-emerald-700 transition-all mt-1"
+              >
+                챌린지 둘러보기
+              </button>
             </div>
-          ))}
+          ) : (
+            completedParticipations.slice(0, 4).map((p) => {
+              const targetCh = challenges.find((c) => c.id === p.challengeId);
+              const dateStr = p.completedAt ? new Date(p.completedAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '최근';
+
+              return (
+                <div
+                  key={p.id}
+                  className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-xs flex items-center justify-between hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-11 h-11 rounded-2xl overflow-hidden shrink-0 bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl">
+                      {targetCh ? targetCh.categoryIcon : '🌱'}
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="font-extrabold text-xs text-slate-800">
+                          {targetCh ? targetCh.title : '친환경 활동 인증'}
+                        </span>
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                          <span>AI 98.4%</span>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2 text-[11px] text-slate-400">
+                        <span className="flex items-center gap-0.5">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          {dateStr}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right space-y-0.5">
+                    <div className="text-xs font-mono font-extrabold text-emerald-700">
+                      +{(p.carbonSaved || 0.5).toFixed(1)}kg CO₂
+                    </div>
+                    <div className="text-[10px] font-mono font-bold text-amber-600 flex items-center justify-end gap-0.5">
+                      <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
+                      +{(p.pointsEarned || 30)}P
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* Weekly Activity Graph */}
+      {/* 6. Weekly Activity Graph */}
       <div className="p-4.5 bg-white rounded-2xl border border-slate-100 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-slate-800">이번 주 탄소절감 활동</h3>

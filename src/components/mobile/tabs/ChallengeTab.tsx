@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import type { ChallengeCategory } from '../../../types';
 import { useApp } from '../../../context/AppContext';
-import { Search, Sparkles, Users, Zap, CheckCircle, MapPin } from 'lucide-react';
+import { Search, Sparkles, Users, Zap, RotateCcw, MapPin, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 export const ChallengeTab: React.FC = () => {
-  const { challenges, participations, setSelectedChallenge } = useApp();
+  const { challenges, participations, setSelectedChallenge, setChallengeToVerify, setIsVerificationOpen } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentRecIndex, setCurrentRecIndex] = useState(0);
 
   const categoryTabs: { id: ChallengeCategory; label: string; icon: string }[] = [
     { id: 'all', label: '전체', icon: '🌟' },
@@ -15,6 +16,11 @@ export const ChallengeTab: React.FC = () => {
     { id: 'food', label: '음식', icon: '🍚' },
     { id: 'resource', label: '자원', icon: '♻️' },
   ];
+
+  // Top 3 Recommended Challenges
+  const recommendedTop3 = challenges
+    .filter((c) => c.isRecommended || c.isPopular)
+    .slice(0, 3);
 
   const filteredChallenges = challenges.filter((c) => {
     if (!c.active) return false;
@@ -25,9 +31,15 @@ export const ChallengeTab: React.FC = () => {
     return matchesCategory && matchesSearch;
   });
 
+  const handleOpenVerifyDirectly = (ch: typeof challenges[0], e: React.MouseEvent) => {
+    e.stopPropagation();
+    setChallengeToVerify(ch);
+    setIsVerificationOpen(true);
+  };
+
   return (
-    <div className="p-4 space-y-4 pb-24 animate-fadeIn">
-      {/* Header Banner for Jinju City x GNU */}
+    <div className="p-4 space-y-4 pb-24 animate-fadeIn select-none">
+      {/* 1. Header Banner for Jinju City x GNU */}
       <div className="bg-gradient-to-r from-teal-800 via-emerald-800 to-slate-900 text-white p-5 rounded-3xl shadow-lg relative overflow-hidden">
         <div className="relative z-10 space-y-1">
           <div className="inline-flex items-center space-x-1 bg-emerald-700/80 border border-emerald-500/50 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-200">
@@ -44,7 +56,114 @@ export const ChallengeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Search Input Bar */}
+      {/* 2. NEW: 오늘의 추천 챌린지 TOP 3 Banner Carousel Section */}
+      {recommendedTop3.length > 0 && (
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-amber-500 fill-amber-400" />
+              <span>오늘의 추천 챌린지 TOP 3</span>
+              <span className="text-[10px] font-extrabold text-white bg-amber-500 px-2 py-0.5 rounded-full shadow-xs">
+                HOT
+              </span>
+            </h3>
+
+            {/* Banner Index Switcher */}
+            <div className="flex items-center space-x-1 text-[11px] font-bold text-slate-500">
+              <button
+                onClick={() => setCurrentRecIndex((prev) => (prev + 1) % recommendedTop3.length)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+              >
+                {currentRecIndex + 1} / {recommendedTop3.length} {'>'}
+              </button>
+            </div>
+          </div>
+
+          {/* Active Banner Card */}
+          {(() => {
+            const ch = recommendedTop3[currentRecIndex];
+            const completedCount = participations.filter(
+              (p) => p.challengeId === ch.id && p.status === 'completed'
+            ).length;
+            const isJoined = participations.some(
+              (p) => p.challengeId === ch.id && p.status === 'in_progress'
+            );
+
+            return (
+              <div
+                key={ch.id}
+                onClick={() => setSelectedChallenge(ch)}
+                className="p-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-3xl shadow-md hover:shadow-lg transition-all cursor-pointer relative overflow-hidden space-y-3"
+              >
+                <div className="flex items-start space-x-3 relative z-10">
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 bg-white/20 backdrop-blur-xs border border-white/30 p-0.5">
+                    <img src={ch.imageUrl} alt={ch.title} className="w-full h-full object-cover rounded-xl" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-1.5">
+                      <span className="text-[10px] font-extrabold bg-white/20 backdrop-blur-xs text-emerald-100 px-2 py-0.5 rounded-full border border-white/20">
+                        {ch.categoryIcon} {ch.categoryName}
+                      </span>
+                    </div>
+
+                    <h4 className="font-extrabold text-base text-white tracking-tight mt-1 truncate">
+                      {ch.title}
+                    </h4>
+
+                    <p className="text-xs text-emerald-100 line-clamp-1 mt-0.5 opacity-90">{ch.description}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-white/20 text-xs relative z-10">
+                  <div className="flex items-center space-x-2.5 font-mono font-medium text-emerald-100">
+                    <span>
+                      절감: <b>{ch.carbonReduction.toFixed(1)}kg</b>
+                    </span>
+                    <span>•</span>
+                    <span className="text-amber-300 font-bold flex items-center gap-0.5">
+                      <Zap className="w-3 h-3 fill-amber-300" />
+                      +{ch.rewardPoints}P
+                    </span>
+                  </div>
+
+                  {/* Action Button */}
+                  <button
+                    onClick={(e) => {
+                      if (completedCount > 0 || isJoined) {
+                        handleOpenVerifyDirectly(ch, e);
+                      } else {
+                        e.stopPropagation();
+                        setSelectedChallenge(ch);
+                      }
+                    }}
+                    className="px-4 py-2 bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                  >
+                    {completedCount > 0 ? (
+                      <>
+                        <RotateCcw className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>다시 도전 (총 {completedCount}회)</span>
+                      </>
+                    ) : isJoined ? (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                        <span>인증하기</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>도전하기</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* 3. Search Input Bar */}
       <div className="relative">
         <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
         <input
@@ -56,7 +175,7 @@ export const ChallengeTab: React.FC = () => {
         />
       </div>
 
-      {/* Category Pills Slider */}
+      {/* 4. Category Pills Slider */}
       <div className="flex space-x-2 overflow-x-auto pb-1 no-scrollbar">
         {categoryTabs.map((tab) => {
           const isActive = selectedCategory === tab.id;
@@ -77,7 +196,7 @@ export const ChallengeTab: React.FC = () => {
         })}
       </div>
 
-      {/* Challenge Cards Grid */}
+      {/* 5. Main Challenge Cards Grid */}
       <div className="space-y-3">
         {filteredChallenges.length === 0 ? (
           <div className="p-8 text-center bg-white rounded-3xl border border-slate-100 text-slate-400">
@@ -86,18 +205,18 @@ export const ChallengeTab: React.FC = () => {
           </div>
         ) : (
           filteredChallenges.map((ch) => {
+            const completedCount = participations.filter(
+              (p) => p.challengeId === ch.id && p.status === 'completed'
+            ).length;
             const isJoined = participations.some(
               (p) => p.challengeId === ch.id && p.status === 'in_progress'
-            );
-            const isCompleted = participations.some(
-              (p) => p.challengeId === ch.id && p.status === 'completed'
             );
 
             return (
               <div
                 key={ch.id}
                 onClick={() => setSelectedChallenge(ch)}
-                className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-3"
+                className="p-4 bg-white rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all cursor-pointer space-y-3"
               >
                 <div className="flex items-start space-x-3">
                   <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 bg-slate-100 relative">
@@ -114,6 +233,14 @@ export const ChallengeTab: React.FC = () => {
                       <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
                         {ch.categoryIcon} {ch.categoryName}
                       </span>
+
+                      {/* Completed Badge Indicator */}
+                      {completedCount > 0 && (
+                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/90 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span>{completedCount}회 실천</span>
+                        </span>
+                      )}
                     </div>
 
                     <h4 className="font-extrabold text-sm text-slate-800 tracking-tight mt-1 truncate">
@@ -141,26 +268,34 @@ export const ChallengeTab: React.FC = () => {
                     </span>
                   </div>
 
+                  {/* Redesigned Button State */}
                   <button
                     onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedChallenge(ch);
+                      if (completedCount > 0 || isJoined) {
+                        handleOpenVerifyDirectly(ch, e);
+                      } else {
+                        e.stopPropagation();
+                        setSelectedChallenge(ch);
+                      }
                     }}
-                    className={`px-3.5 py-1.5 rounded-xl font-bold text-xs shadow-md transition-transform active:scale-95 ${
-                      isCompleted
-                        ? 'bg-slate-100 text-slate-600 border border-slate-200'
+                    className={`px-3.5 py-1.5 rounded-xl font-bold text-xs shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center gap-1 ${
+                      completedCount > 0
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-600/20'
                         : isJoined
-                        ? 'bg-amber-500 text-slate-950 shadow-amber-500/20'
+                        ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
                         : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
                     }`}
                   >
-                    {isCompleted ? (
-                      <span className="flex items-center gap-1">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                        인증완료
-                      </span>
+                    {completedCount > 0 ? (
+                      <>
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>다시 도전 ↻</span>
+                      </>
                     ) : isJoined ? (
-                      '인증하기'
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>인증하기</span>
+                      </>
                     ) : (
                       '도전하기'
                     )}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Camera, CheckCircle2, ShieldCheck, Sparkles, Users, X, Zap } from 'lucide-react';
+import { Camera, CheckCircle2, RotateCcw, ShieldCheck, Sparkles, Users, X, Zap } from 'lucide-react';
 
 export const ChallengeDetailModal: React.FC = () => {
   const {
@@ -14,11 +14,12 @@ export const ChallengeDetailModal: React.FC = () => {
 
   if (!selectedChallenge) return null;
 
+  const completedCount = participations.filter(
+    (p) => p.challengeId === selectedChallenge.id && p.status === 'completed'
+  ).length;
+
   const isJoined = participations.some(
     (p) => p.challengeId === selectedChallenge.id && p.status === 'in_progress'
-  );
-  const isCompleted = participations.some(
-    (p) => p.challengeId === selectedChallenge.id && p.status === 'completed'
   );
 
   const handleJoin = () => {
@@ -32,7 +33,7 @@ export const ChallengeDetailModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn select-none">
       <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col relative max-h-[90vh] overflow-y-auto animate-scaleUp">
         {/* Cover Image Header */}
         <div className="relative h-48 w-full bg-slate-200">
@@ -121,39 +122,51 @@ export const ChallengeDetailModal: React.FC = () => {
 
           {/* Bottom Action Area */}
           <div className="pt-2">
-            {!isJoined && !isCompleted && (
+            {!isJoined && completedCount === 0 && (
               <button
                 onClick={handleJoin}
-                className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all active:scale-95"
+                className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all active:scale-95 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>챌린지 참여하기</span>
               </button>
             )}
 
-            {isJoined && !isCompleted && (
+            {isJoined && (
               <div className="space-y-2">
-                <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl text-center">
-                  ✅ 챌린지 참여 중입니다! 실천 후 사진을 인증해주세요.
+                <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold rounded-xl text-center">
+                  ⚡ 챌린지 참여 중! 실천 사진을 촬영하고 포인트와 절감량을 적립받으세요.
                 </div>
                 <button
                   onClick={handleOpenVerify}
-                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-amber-500/30 flex items-center justify-center space-x-2 transition-all active:scale-95"
+                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-amber-500/30 flex items-center justify-center space-x-2 transition-all active:scale-95 cursor-pointer"
                 >
                   <Camera className="w-4 h-4" />
-                  <span>실천 인증하기</span>
+                  <span>실천 사진 인증하기</span>
                 </button>
               </div>
             )}
 
-            {isCompleted && (
-              <button
-                onClick={handleOpenVerify}
-                className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-2xl shadow-md flex items-center justify-center space-x-2 transition-all"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>추가 실천 인증하기 (+재인증)</span>
-              </button>
+            {completedCount > 0 && (
+              <div className="space-y-2">
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold rounded-xl flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>오늘 총 {completedCount}회 실천 성공!</span>
+                  </span>
+                  <span className="text-[10px] bg-emerald-200/80 text-emerald-950 px-2 py-0.5 rounded font-black">
+                    상시 재도전 가능
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleOpenVerify}
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all active:scale-95 cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>다시 도전하기 (추가 사진 인증) ↻</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
