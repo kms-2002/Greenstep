@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { ChallengeCategory } from '../../../types';
 import { useApp } from '../../../context/AppContext';
-import { Search, Sparkles, Users, Zap, RotateCcw, MapPin, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Search, Sparkles, Users, Zap, RotateCcw, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 export const ChallengeTab: React.FC = () => {
   const { challenges, participations, setSelectedChallenge, setChallengeToVerify, setIsVerificationOpen } = useApp();
@@ -39,24 +39,7 @@ export const ChallengeTab: React.FC = () => {
 
   return (
     <div className="p-4 space-y-4 pb-24 animate-fadeIn select-none">
-      {/* 1. Header Banner for Jinju City x GNU */}
-      <div className="bg-gradient-to-r from-teal-800 via-emerald-800 to-slate-900 text-white p-5 rounded-3xl shadow-lg relative overflow-hidden">
-        <div className="relative z-10 space-y-1">
-          <div className="inline-flex items-center space-x-1 bg-emerald-700/80 border border-emerald-500/50 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-200">
-            <MapPin className="w-3 h-3 text-emerald-300" />
-            <span>진주시 × 경상국립대학교 탄소중립 실천</span>
-          </div>
-
-          <h2 className="text-xl font-extrabold tracking-tight pt-1">
-            친환경 챌린지 🎯
-          </h2>
-          <p className="text-xs text-emerald-200">
-            진주시 대표 환경 운동과 가좌캠퍼스 실천으로 탄소를 절감해보세요!
-          </p>
-        </div>
-      </div>
-
-      {/* 2. NEW: 오늘의 추천 챌린지 TOP 3 Banner Carousel Section */}
+      {/* 오늘의 추천 챌린지 TOP 3 Banner Carousel Section */}
       {recommendedTop3.length > 0 && (
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between">
