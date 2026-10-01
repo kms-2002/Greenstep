@@ -1,7 +1,7 @@
 import React from 'react';
 import type { TabType } from '../../context/AppContext';
 import { useApp } from '../../context/AppContext';
-import { Activity, Award, Home, MessageSquare, Target, User } from 'lucide-react';
+import { Award, Home, MessageSquare, Target, User } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { activeTab, setActiveTab } = useApp();
@@ -11,8 +11,7 @@ export const BottomNav: React.FC = () => {
     { id: 'challenge', label: '챌린지', icon: <Target className="w-5 h-5" /> },
     { id: 'ranking', label: '랭킹', icon: <Award className="w-5 h-5" /> },
     { id: 'board', label: '커뮤니티', icon: <MessageSquare className="w-5 h-5" /> },
-    { id: 'activity', label: '나의 활동', icon: <Activity className="w-5 h-5" /> },
-    { id: 'my', label: '마이', icon: <User className="w-5 h-5" /> },
+    { id: 'my', label: '마이페이지', icon: <User className="w-5 h-5" /> },
   ];
 
   return (

@@ -18,7 +18,7 @@ import {
 import { INITIAL_CARBON_FACTORS, calculateTreeInfo } from '../utils/carbonCalculator';
 import confetti from 'canvas-confetti';
 
-export type TabType = 'home' | 'challenge' | 'ranking' | 'board' | 'activity' | 'my';
+export type TabType = 'home' | 'challenge' | 'ranking' | 'board' | 'my';
 export type ViewMode = 'mobile' | 'admin';
 
 interface CompletionResult {

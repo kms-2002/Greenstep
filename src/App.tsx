@@ -11,7 +11,6 @@ import { HomeTab } from './components/mobile/tabs/HomeTab';
 import { ChallengeTab } from './components/mobile/tabs/ChallengeTab';
 import { RankingTab } from './components/mobile/tabs/RankingTab';
 import { BoardTab } from './components/mobile/tabs/BoardTab';
-import { ActivityTab } from './components/mobile/tabs/ActivityTab';
 import { MyPageTab } from './components/mobile/tabs/MyPageTab';
 import { Wifi, Battery } from 'lucide-react';
 
@@ -68,7 +67,6 @@ const MainContent: React.FC = () => {
                         {activeTab === 'challenge' && <ChallengeTab />}
                         {activeTab === 'ranking' && <RankingTab />}
                         {activeTab === 'board' && <BoardTab />}
-                        {activeTab === 'activity' && <ActivityTab />}
                         {activeTab === 'my' && <MyPageTab />}
                       </main>
 

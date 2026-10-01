@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
+import { VirtualTree } from '../VirtualTree';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import {
   MapPin,
@@ -10,7 +11,6 @@ import {
   Trophy,
   HelpCircle,
   Gift,
-  ChevronRight,
   Coffee,
   Sparkles,
   X,
@@ -18,6 +18,7 @@ import {
   Clock,
   Leaf,
   Zap,
+  Flame,
 } from 'lucide-react';
 
 export const HomeTab: React.FC = () => {
@@ -133,12 +134,63 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Eco Practice Dashboard Card */}
+      {/* 3. NEW: Virtual Carbon Tree (탄소나무 홈 화면 직접 연동) */}
+      <VirtualTree totalCarbon={user.totalCarbonReduction} />
+
+      {/* 4. Activity Stats 4 Grid Summary (활동 요약 메트릭) */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-xs">
+          <span className="text-xs text-slate-500 font-bold block mb-1">누적 탄소절감량</span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-black text-emerald-700 font-mono">
+              {user.totalCarbonReduction.toFixed(1)}
+            </span>
+            <span className="text-xs font-bold text-slate-500">kg CO₂e</span>
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-xs">
+          <span className="text-xs text-slate-500 font-bold block mb-1 flex items-center gap-1">
+            <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+            연속 실천
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-black text-amber-600 font-mono">{user.consecutiveDays}</span>
+            <span className="text-xs font-bold text-slate-500">일째</span>
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-xs">
+          <span className="text-xs text-slate-500 font-bold block mb-1 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
+            챌린지 성공
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-black text-teal-700 font-mono">{completedParticipations.length}</span>
+            <span className="text-xs font-bold text-slate-500">회</span>
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-xs">
+          <span className="text-xs text-slate-500 font-bold block mb-1 flex items-center gap-1">
+            <Zap className="w-3.5 h-3.5 text-indigo-600 fill-indigo-500" />
+            포인트
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-black text-indigo-700 font-mono">
+              {user.points.toLocaleString()}
+            </span>
+            <span className="text-xs font-bold text-slate-500">P</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Eco Practice Dashboard Card */}
       <div className="bg-[#EAF5E9] border border-emerald-200/80 rounded-3xl p-4.5 shadow-xs relative overflow-hidden">
         {/* Top Header inside Dashboard Card */}
         <div className="flex items-center justify-between mb-3.5">
           <h3 className="text-base font-bold text-emerald-950 tracking-tight flex items-center gap-1.5">
-            <span>녹색생활실천</span>
+            <span>녹색생활실천 현황</span>
           </h3>
 
           {/* Cute Coffee / Tumbler Illustration Icon */}
@@ -160,9 +212,9 @@ export const HomeTab: React.FC = () => {
 
           {/* Item 2 */}
           <div className="space-y-0.5 border-x border-slate-200/60">
-            <span className="text-[11px] font-semibold text-slate-500 block">상세건수</span>
+            <span className="text-[11px] font-semibold text-slate-500 block">오늘의 절감</span>
             <div className="text-base font-bold text-slate-900">
-              {user.todayCarbonReduction.toFixed(1)} <span className="text-[10px] font-medium text-slate-500">(km/kg)</span>
+              {user.todayCarbonReduction.toFixed(1)} <span className="text-[10px] font-medium text-slate-500">(kg CO₂)</span>
             </div>
           </div>
 
@@ -176,7 +228,7 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Quick Action 8 Grid Icon Buttons */}
+      {/* 6. Quick Action 8 Grid Icon Buttons */}
       <div className="grid grid-cols-4 gap-2.5 pt-1">
         {/* Button 1: 매장찾기 */}
         <button
@@ -222,7 +274,7 @@ export const HomeTab: React.FC = () => {
           <span className="text-xs font-bold text-slate-800">실적달력</span>
         </button>
 
-        {/* Button 5: 실천활동 */}
+        {/* Button 5: 커뮤니티 */}
         <button
           onClick={() => setActiveTab('board')}
           className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
@@ -230,7 +282,7 @@ export const HomeTab: React.FC = () => {
           <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center">
             <Globe2 className="w-5 h-5 text-indigo-600" />
           </div>
-          <span className="text-xs font-bold text-slate-800">실천활동</span>
+          <span className="text-xs font-bold text-slate-800">커뮤니티</span>
         </button>
 
         {/* Button 6: 학과랭킹 */}
@@ -267,22 +319,15 @@ export const HomeTab: React.FC = () => {
         </button>
       </div>
 
-      {/* 5. NEW: 나의 최근 실천 활동 (My Activity Feed Linked Directly to Home) */}
+      {/* 7. 나의 최근 실천 활동 LIVE 피드 */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800 tracking-tight flex items-center gap-1.5">
-            <span>나의 최근 실천 활동</span>
+            <span>나의 실천 인증 피드</span>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
               LIVE
             </span>
           </h3>
-          <button
-            onClick={() => setActiveTab('activity')}
-            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center cursor-pointer"
-          >
-            <span>전체 보고서</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
         </div>
 
         <div className="space-y-2.5">
@@ -349,7 +394,7 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 6. Weekly Activity Graph */}
+      {/* 8. Weekly Activity Graph */}
       <div className="p-4.5 bg-white rounded-2xl border border-slate-100 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-slate-800">이번 주 탄소절감 활동</h3>
