@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import type { ChallengeCategory } from '../../../types';
 import { useApp } from '../../../context/AppContext';
-import { Search, Sparkles, Users, Zap, RotateCcw, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Search, Sparkles, Users, Zap, RotateCcw, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 export const ChallengeTab: React.FC = () => {
   const { challenges, participations, setSelectedChallenge, setChallengeToVerify, setIsVerificationOpen } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentRecIndex, setCurrentRecIndex] = useState(0);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
 
   const categoryTabs: { id: ChallengeCategory; label: string; icon: string }[] = [
     { id: 'all', label: '전체', icon: '🌟' },
@@ -159,24 +160,42 @@ export const ChallengeTab: React.FC = () => {
       </div>
 
       {/* 4. Category Pills Slider */}
-      <div className="flex space-x-2 overflow-x-auto pb-1 no-scrollbar">
-        {categoryTabs.map((tab) => {
-          const isActive = selectedCategory === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setSelectedCategory(tab.id)}
-              className={`px-3.5 py-2 rounded-2xl text-xs font-bold shrink-0 flex items-center space-x-1.5 transition-all ${
-                isActive
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 scale-105'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          aria-label="이전 카테고리 보기"
+          onClick={() => categoryScrollRef.current?.scrollBy({ left: -160, behavior: 'smooth' })}
+          className="w-7 h-7 shrink-0 rounded-full bg-white border border-slate-200 text-slate-600 shadow-xs flex items-center justify-center hover:bg-slate-50 active:scale-95"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <div ref={categoryScrollRef} className="flex flex-1 min-w-0 space-x-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+          {categoryTabs.map((tab) => {
+            const isActive = selectedCategory === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedCategory(tab.id)}
+                className={`px-3.5 py-2 rounded-2xl text-xs font-bold shrink-0 flex items-center space-x-1.5 transition-all ${
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 scale-105'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          aria-label="다음 카테고리 보기"
+          onClick={() => categoryScrollRef.current?.scrollBy({ left: 160, behavior: 'smooth' })}
+          className="w-7 h-7 shrink-0 rounded-full bg-white border border-slate-200 text-slate-600 shadow-xs flex items-center justify-center hover:bg-slate-50 active:scale-95"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
 
       {/* 5. Main Challenge Cards Grid */}

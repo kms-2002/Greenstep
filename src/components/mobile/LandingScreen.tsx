@@ -115,9 +115,6 @@ export const LandingScreen: React.FC = () => {
           </button>
         </div>
 
-        <p className="text-[11px] text-center text-slate-400 font-normal">
-          경상국립대학교 경영대학 5개 학과 재학생 연동
-        </p>
       </div>
     </div>
   );

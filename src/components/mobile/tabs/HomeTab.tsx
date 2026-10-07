@@ -87,12 +87,6 @@ export const HomeTab: React.FC = () => {
           <span className="text-slate-900">{user.nickname}</span>님, 안녕하세요
         </h2>
 
-        <div className="flex items-center space-x-1 text-xs">
-          <span className="text-emerald-700 font-bold bg-emerald-50 border border-emerald-200/70 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>녹색생활 1,504,824 참여중</span>
-          </span>
-        </div>
       </div>
 
       {/* 2. Main Promotional Pink Banner Card */}

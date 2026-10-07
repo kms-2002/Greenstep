@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/mobile/Header';
 import { BottomNav } from './components/mobile/BottomNav';
@@ -14,8 +14,41 @@ import { BoardTab } from './components/mobile/tabs/BoardTab';
 import { MyPageTab } from './components/mobile/tabs/MyPageTab';
 import { Wifi, Battery } from 'lucide-react';
 
+const getLocalTime = () =>
+  new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' })
+    .formatToParts(new Date())
+    .filter((part) => part.type !== 'dayPeriod')
+    .map((part) => part.value)
+    .join('')
+    .trim();
+
 const MainContent: React.FC = () => {
   const { isAuthenticated, activeTab } = useApp();
+  const [currentTime, setCurrentTime] = useState(getLocalTime);
+
+  useEffect(() => {
+    const updateTime = () => setCurrentTime(getLocalTime());
+    const alignToNextMinute = () => {
+      updateTime();
+      const delay = 60_000 - (Date.now() % 60_000) + 20;
+      timeoutId = window.setTimeout(() => {
+        updateTime();
+        intervalId = window.setInterval(updateTime, 60_000);
+      }, delay);
+    };
+    let timeoutId: number;
+    let intervalId: number;
+    alignToNextMinute();
+    document.addEventListener('visibilitychange', updateTime);
+    window.addEventListener('focus', updateTime);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', updateTime);
+      window.removeEventListener('focus', updateTime);
+    };
+  }, []);
 
   return (
     <div className="website-container font-sans antialiased text-slate-900 select-none">
@@ -38,7 +71,7 @@ const MainContent: React.FC = () => {
                 
                 {/* Real Dynamic Island Status Bar */}
                 <div className="status-bar">
-                  <span className="status-bar-time font-mono">9:41</span>
+                  <time className="status-bar-time font-mono">{currentTime}</time>
                   
                   {/* Dynamic Island Pill Notch */}
                   <div className="dynamic-island">
@@ -53,7 +86,7 @@ const MainContent: React.FC = () => {
                 </div>
 
                 {/* App Main Screen View */}
-                <div className="flex-1 flex flex-col relative overflow-hidden bg-slate-50 pt-[52px]">
+                <div className="app-screen flex-1 flex flex-col relative overflow-hidden bg-slate-50">
                   {!isAuthenticated ? (
                     <LandingScreen />
                   ) : (
@@ -77,7 +110,7 @@ const MainContent: React.FC = () => {
                 </div>
 
                 {/* Bottom Home Indicator Bar */}
-                <div className="w-full bg-white py-1.5 flex justify-center shrink-0 z-40">
+                <div className="home-indicator-area w-full bg-white py-1.5 flex justify-center shrink-0 z-40">
                   <div className="w-32 h-1 bg-slate-900/80 rounded-full" />
                 </div>
 

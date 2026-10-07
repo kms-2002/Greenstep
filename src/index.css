@@ -152,6 +152,30 @@
   right: 0;
 }
 
+.app-screen {
+  padding-top: 52px;
+  min-height: 0;
+}
+
+.bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.home-indicator-area {
+  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+}
+
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.55);
+  outline-offset: 2px;
+}
+
 .status-bar-time {
   color: #172b3a;
   letter-spacing: -0.01em;
@@ -201,6 +225,16 @@
     padding: 0;
     box-shadow: none;
     background: #fff;
+  }
+  .app-screen {
+    padding-top: calc(52px + env(safe-area-inset-top, 0px));
+  }
+  .status-bar {
+    height: calc(54px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .dynamic-island {
+    top: calc(10px + env(safe-area-inset-top, 0px));
   }
   .iphone-edge, .iphone-bezel {
     border-radius: 0;
@@ -256,4 +290,15 @@
 
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
