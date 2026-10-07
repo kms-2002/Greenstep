@@ -1,7 +1,7 @@
 import React from 'react';
 import type { TabType } from '../../context/AppContext';
 import { useApp } from '../../context/AppContext';
-import { Award, Brain, Home, Target, User } from 'lucide-react';
+import { Award, Clover, Home, Target, User } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { activeTab, setActiveTab } = useApp();
@@ -10,7 +10,7 @@ export const BottomNav: React.FC = () => {
     { id: 'home', label: '홈', icon: <Home className="w-5 h-5" /> },
     { id: 'challenge', label: '챌린지', icon: <Target className="w-5 h-5" /> },
     { id: 'ranking', label: '랭킹', icon: <Award className="w-5 h-5" /> },
-    { id: 'quiz', label: '그린퀴즈', icon: <Brain className="w-5 h-5" /> },
+    { id: 'quiz', label: '그린퀴즈', icon: <Clover className="w-5 h-5" /> },
     { id: 'my', label: '마이페이지', icon: <User className="w-5 h-5" /> },
   ];
 

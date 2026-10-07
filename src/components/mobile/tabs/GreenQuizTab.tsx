@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Award, Brain, CalendarCheck, CheckCircle2, CircleHelp, Flame, RotateCcw, Sparkles, Target, Zap } from 'lucide-react';
+import { Award, Clover, CalendarCheck, CheckCircle2, CircleHelp, Flame, RotateCcw, Sparkles, Target, Zap } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
 import { getActivityQuizCategory, generateDailyGreenQuiz } from '../../../data/greenQuizGenerator';
 import type { ChallengeCategory } from '../../../types';
@@ -131,7 +131,7 @@ export const GreenQuizTab: React.FC = () => {
             <h2 className="mt-3 text-xl font-black">오늘의 그린퀴즈</h2>
             <p className="mt-1 text-xs leading-relaxed text-emerald-50">{quiz.personalizationLabel}</p>
           </div>
-          <div className="rounded-2xl bg-white/15 p-3"><Brain className="h-7 w-7" /></div>
+          <div className="rounded-2xl bg-white/15 p-3"><Clover className="h-7 w-7" /></div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <div className="rounded-2xl bg-white/10 p-3"><div className="flex items-center gap-1 text-[10px] text-emerald-100"><Flame className="h-3 w-3" />연속 참여</div><p className="mt-1 text-lg font-black">{currentStreak}<span className="ml-1 text-xs font-bold">일</span></p></div>

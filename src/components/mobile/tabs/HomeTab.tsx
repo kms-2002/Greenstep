@@ -18,7 +18,7 @@ import {
   Leaf,
   Zap,
   Flame,
-  Brain,
+  Clover,
 } from 'lucide-react';
 import { getChallengeRewardPoints } from '../../../lib/challengeRewards';
 
@@ -276,7 +276,7 @@ export const HomeTab: React.FC = () => {
           className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
         >
           <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center">
-            <Brain className="w-5 h-5 text-indigo-600" />
+            <Clover className="w-5 h-5 text-indigo-600" />
           </div>
           <span className="text-xs font-bold text-slate-800">그린퀴즈</span>
         </button>
