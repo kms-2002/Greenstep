@@ -1,14 +1,31 @@
-import React from 'react';
-import { calculateTreeInfo } from '../../utils/carbonCalculator';
-import { Sparkles, TreePine, Leaf } from 'lucide-react';
+import React, { useState } from 'react';
+import { calculateTreeInfo, TREE_STAGES } from '../../utils/carbonCalculator';
+import { ChevronRight, Sparkles, TreePine, Leaf, X } from 'lucide-react';
+import type { TreeStage } from '../../utils/carbonCalculator';
 
 interface VirtualTreeProps {
   totalCarbon: number;
 }
 
+const TreeArtwork: React.FC<{ treeStage: TreeStage; sizeClass: string }> = ({ treeStage, sizeClass }) => (
+  <span className={`relative inline-flex items-center justify-center ${sizeClass}`} aria-label={treeStage.fruitBearing ? '열매가 열린 나무' : treeStage.name}>
+    <span>{treeStage.emoji}</span>
+    {treeStage.fruitBearing && <>
+      <span aria-hidden="true" className="absolute left-[18%] top-[27%] text-[0.28em]">🍎</span>
+      <span aria-hidden="true" className="absolute right-[18%] top-[38%] text-[0.28em]">🍊</span>
+      <span aria-hidden="true" className="absolute left-[42%] top-[52%] text-[0.26em]">🍎</span>
+    </>}
+  </span>
+);
+
 export const VirtualTree: React.FC<VirtualTreeProps> = ({ totalCarbon }) => {
   const treeInfo = calculateTreeInfo(totalCarbon);
   const { level, stage, progressPercent, remainingCarbon } = treeInfo;
+  const [isGrowthGuideOpen, setIsGrowthGuideOpen] = useState(false);
+  const [selectedStageLevel, setSelectedStageLevel] = useState(stage.level);
+  const selectedStage = TREE_STAGES.find((item) => item.level === selectedStageLevel) ?? stage;
+  const treeSize = ['text-6xl', 'text-7xl', 'text-8xl', 'text-9xl'][selectedStage.level - 1];
+  const currentTreeSize = ['text-6xl', 'text-7xl', 'text-8xl', 'text-9xl'][stage.level - 1];
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-emerald-800 via-teal-900 to-slate-900 text-white p-5 shadow-xl border border-emerald-700/50">
@@ -54,53 +71,25 @@ export const VirtualTree: React.FC<VirtualTreeProps> = ({ totalCarbon }) => {
           <div className="absolute bottom-1 w-28 h-6 bg-emerald-950/80 rounded-full blur-md border border-emerald-600/30" />
 
           {/* Dynamic SVG Tree depending on stage */}
-          <div className="relative z-10 transition-transform duration-500 hover:scale-105 cursor-pointer">
-            {stage.level === 1 && (
-              <div className="flex flex-col items-center">
-                <span className="text-7xl drop-shadow-[0_10px_20px_rgba(16,185,129,0.5)] animate-bounce">🌱</span>
-                <span className="text-[11px] text-emerald-200 mt-1 font-medium bg-emerald-900/60 px-2 py-0.5 rounded-full">
-                  Lv.1~4 새싹 싹트기
-                </span>
-              </div>
-            )}
-            {stage.level === 2 && (
-              <div className="flex flex-col items-center">
-                <span className="text-7xl drop-shadow-[0_10px_20px_rgba(16,185,129,0.5)] animate-pulse">🌿</span>
-                <span className="text-[11px] text-emerald-200 mt-1 font-medium bg-emerald-900/60 px-2 py-0.5 rounded-full">
-                  Lv.5~8 파릇파릇 어린줄기
-                </span>
-              </div>
-            )}
-            {stage.level === 3 && (
-              <div className="flex flex-col items-center">
-                <span className="text-7xl drop-shadow-[0_10px_20px_rgba(16,185,129,0.5)]">🪴</span>
-                <span className="text-[11px] text-emerald-200 mt-1 font-medium bg-emerald-900/60 px-2 py-0.5 rounded-full">
-                  Lv.9~11 튼튼한 어린나무
-                </span>
-              </div>
-            )}
-            {stage.level === 4 && (
-              <div className="flex flex-col items-center">
-                <span className="text-8xl drop-shadow-[0_12px_24px_rgba(16,185,129,0.6)]">🌳</span>
-                <span className="text-[11px] text-emerald-200 mt-1 font-medium bg-emerald-900/60 px-2 py-0.5 rounded-full">
-                  Lv.12~18 푸르른 싱싱한 나무
-                </span>
-              </div>
-            )}
-            {stage.level >= 5 && (
-              <div className="flex flex-col items-center">
-                <span className="text-8xl drop-shadow-[0_15px_30px_rgba(16,185,129,0.7)] animate-pulse">🌲</span>
-                <span className="text-[11px] text-emerald-200 mt-1 font-medium bg-emerald-900/60 px-2 py-0.5 rounded-full">
-                  Lv.19~20 거대한 탄소보호숲
-                </span>
-              </div>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={() => { setSelectedStageLevel(stage.level); setIsGrowthGuideOpen(true); }}
+            aria-label="탄소나무 레벨별 성장 모습 보기"
+            className="relative z-10 flex flex-col items-center transition-transform duration-500 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300"
+          >
+            <span className={`drop-shadow-[0_10px_20px_rgba(16,185,129,0.5)] ${stage.level <= 2 ? 'animate-pulse' : ''} ${stage.level >= 4 ? 'animate-bounce' : ''}`}>
+              <TreeArtwork treeStage={stage} sizeClass={currentTreeSize} />
+            </span>
+            <span className="mt-1 rounded-full bg-emerald-900/60 px-2 py-0.5 text-[11px] font-medium text-emerald-200">Lv.{stage.minLevel}~{stage.maxLevel} {stage.name}</span>
+          </button>
         </div>
 
         <p className="text-xs text-center text-emerald-200/90 font-light mt-1 max-w-xs">
           "{stage.description}"
         </p>
+        <button type="button" onClick={() => { setSelectedStageLevel(stage.level); setIsGrowthGuideOpen(true); }} className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-200/80 hover:text-white">
+          레벨별 나무 성장 보기 <ChevronRight className="h-3.5 w-3.5" />
+        </button>
       </div>
 
       {/* Progress Bar Footer */}
@@ -124,6 +113,42 @@ export const VirtualTree: React.FC<VirtualTreeProps> = ({ totalCarbon }) => {
           </span>
         </div>
       </div>
+
+      {isGrowthGuideOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" onClick={() => setIsGrowthGuideOpen(false)}>
+          <section role="dialog" aria-modal="true" aria-labelledby="tree-growth-title" onClick={(event) => event.stopPropagation()} className="relative max-h-[85vh] w-full max-w-sm space-y-4 overflow-y-auto rounded-3xl bg-white p-5 text-slate-900 shadow-2xl">
+            <button type="button" onClick={() => setIsGrowthGuideOpen(false)} aria-label="닫기" className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button>
+            <div>
+              <h3 id="tree-growth-title" className="text-base font-extrabold">나의 탄소나무 성장 단계</h3>
+              <p className="mt-1 text-xs text-slate-500">실천이 쌓일수록 나무의 모습이 달라져요.</p>
+            </div>
+
+            <div className="space-y-2">
+              {TREE_STAGES.map((growthStage) => {
+                const isCurrent = growthStage.level === stage.level;
+                const isSelected = growthStage.level === selectedStage.level;
+                return (
+                  <button key={growthStage.level} type="button" onClick={() => setSelectedStageLevel(growthStage.level)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${isSelected ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'}`}>
+                    <TreeArtwork treeStage={growthStage} sizeClass="text-3xl" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-extrabold text-slate-800">Lv.{growthStage.minLevel}~{growthStage.maxLevel} · {growthStage.name}</span>
+                      <span className="mt-0.5 block text-[10px] text-slate-500">누적 {growthStage.minCarbon}kg 이상 실천</span>
+                    </span>
+                    {isCurrent && <span className="rounded-full bg-emerald-600 px-2 py-1 text-[9px] font-extrabold text-white">현재 Lv.{level}</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 p-4 text-center">
+              <span className="drop-shadow-sm"><TreeArtwork treeStage={selectedStage} sizeClass={treeSize} /></span>
+              <p className="mt-1 text-sm font-extrabold text-emerald-900">Lv.{selectedStage.minLevel}~{selectedStage.maxLevel} {selectedStage.name}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600">{selectedStage.description}</p>
+              {selectedStage.level === stage.level && <p className="mt-2 text-[11px] font-bold text-emerald-700">현재 나무 · Lv.{level}</p>}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,7 +7,6 @@ import {
   Store,
   Building2,
   CalendarCheck2,
-  Globe2,
   Trophy,
   HelpCircle,
   Gift,
@@ -19,7 +18,9 @@ import {
   Leaf,
   Zap,
   Flame,
+  Brain,
 } from 'lucide-react';
+import { getChallengeRewardPoints } from '../../../lib/challengeRewards';
 
 export const HomeTab: React.FC = () => {
   const { user, challenges, participations, setActiveTab } = useApp();
@@ -77,6 +78,10 @@ export const HomeTab: React.FC = () => {
 
   // User's Completed Activities Feed
   const completedParticipations = participations.filter((p) => p.status === 'completed');
+  const officialCompletedParticipations = completedParticipations.filter((participation) => {
+    const challenge = challenges.find((item) => item.id === participation.challengeId);
+    return challenge?.active && challenge.officialIncentiveId;
+  });
 
   return (
     <div className="p-4 space-y-4 pb-24 animate-fadeIn select-none">
@@ -265,15 +270,15 @@ export const HomeTab: React.FC = () => {
           <span className="text-xs font-bold text-slate-800">실적달력</span>
         </button>
 
-        {/* Button 5: 커뮤니티 */}
+        {/* Button 5: 그린퀴즈 */}
         <button
-          onClick={() => setActiveTab('board')}
+          onClick={() => setActiveTab('quiz')}
           className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
         >
           <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center">
-            <Globe2 className="w-5 h-5 text-indigo-600" />
+            <Brain className="w-5 h-5 text-indigo-600" />
           </div>
-          <span className="text-xs font-bold text-slate-800">커뮤니티</span>
+          <span className="text-xs font-bold text-slate-800">그린퀴즈</span>
         </button>
 
         {/* Button 6: 학과랭킹 */}
@@ -310,23 +315,20 @@ export const HomeTab: React.FC = () => {
         </button>
       </div>
 
-      {/* 6. 나의 최근 실천 활동 LIVE 피드 */}
+      {/* 6. 나의 최근 공식 포인트 실천 피드 */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800 tracking-tight flex items-center gap-1.5">
             <span>나의 실천 인증 피드</span>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-              LIVE
-            </span>
           </h3>
         </div>
 
         <div className="space-y-2.5">
-          {completedParticipations.length === 0 ? (
+          {officialCompletedParticipations.length === 0 ? (
             <div className="p-6 bg-white rounded-2xl border border-slate-100 text-center space-y-2 shadow-xs">
               <Leaf className="w-8 h-8 text-emerald-400 mx-auto" />
               <p className="text-xs font-bold text-slate-700">아직 인증된 실천 활동이 없습니다.</p>
-              <p className="text-[11px] text-slate-400">첫 챌린지에 도전하고 탄소 포인트를 받아보세요!</p>
+              <p className="text-[11px] text-slate-400">공식 포인트 기준이 연결된 챌린지에 참여해보세요.</p>
               <button
                 onClick={() => setActiveTab('challenge')}
                 className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer hover:bg-emerald-700 transition-all mt-1"
@@ -335,8 +337,9 @@ export const HomeTab: React.FC = () => {
               </button>
             </div>
           ) : (
-            completedParticipations.slice(0, 4).map((p) => {
+            officialCompletedParticipations.slice(0, 4).map((p) => {
               const targetCh = challenges.find((c) => c.id === p.challengeId);
+              if (!targetCh) return null;
               const dateStr = p.completedAt ? new Date(p.completedAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '최근';
 
               return (
@@ -346,18 +349,12 @@ export const HomeTab: React.FC = () => {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-11 h-11 rounded-2xl overflow-hidden shrink-0 bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl">
-                      {targetCh ? targetCh.categoryIcon : '🌱'}
+                      {targetCh.categoryIcon}
                     </div>
 
                     <div className="space-y-0.5">
                       <div className="flex items-center space-x-1.5">
-                        <span className="font-extrabold text-xs text-slate-800">
-                          {targetCh ? targetCh.title : '친환경 활동 인증'}
-                        </span>
-                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                          <span>AI 98.4%</span>
-                        </span>
+                        <span className="font-extrabold text-xs text-slate-800">{targetCh.title}</span>
                       </div>
 
                       <div className="flex items-center space-x-2 text-[11px] text-slate-400">
@@ -370,12 +367,9 @@ export const HomeTab: React.FC = () => {
                   </div>
 
                   <div className="text-right space-y-0.5">
-                    <div className="text-xs font-mono font-extrabold text-emerald-700">
-                      +{(p.carbonSaved || 0.5).toFixed(1)}kg CO₂
-                    </div>
                     <div className="text-[10px] font-mono font-bold text-amber-600 flex items-center justify-end gap-0.5">
                       <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
-                      +{(p.pointsEarned || 30)}P
+                      +{getChallengeRewardPoints(targetCh).toLocaleString()}P
                     </div>
                   </div>
                 </div>

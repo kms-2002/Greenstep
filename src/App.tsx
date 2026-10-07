@@ -10,8 +10,9 @@ import { LandingScreen } from './components/mobile/LandingScreen';
 import { HomeTab } from './components/mobile/tabs/HomeTab';
 import { ChallengeTab } from './components/mobile/tabs/ChallengeTab';
 import { RankingTab } from './components/mobile/tabs/RankingTab';
-import { BoardTab } from './components/mobile/tabs/BoardTab';
+import { GreenQuizTab } from './components/mobile/tabs/GreenQuizTab';
 import { MyPageTab } from './components/mobile/tabs/MyPageTab';
+import { GreenstepChatbot } from './components/mobile/GreenstepChatbot';
 import { Wifi, Battery } from 'lucide-react';
 
 const getLocalTime = () =>
@@ -99,12 +100,13 @@ const MainContent: React.FC = () => {
                         {activeTab === 'home' && <HomeTab />}
                         {activeTab === 'challenge' && <ChallengeTab />}
                         {activeTab === 'ranking' && <RankingTab />}
-                        {activeTab === 'board' && <BoardTab />}
+                        {activeTab === 'quiz' && <GreenQuizTab />}
                         {activeTab === 'my' && <MyPageTab />}
                       </main>
 
                       {/* Bottom Fixed Navigation Bar */}
                       <BottomNav />
+                      {activeTab === 'home' && <GreenstepChatbot />}
                     </>
                   )}
                 </div>

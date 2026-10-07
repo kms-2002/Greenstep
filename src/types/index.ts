@@ -89,6 +89,8 @@ export interface Challenge {
   carbonReduction: number; // kg CO2e per action
   unitDescription: string;
   rewardPoints: number;
+  officialIncentiveId?: string;
+  officialIncentiveQuantity?: number;
   participantsCount: number;
   verificationMethod: string;
   imageUrl: string;
@@ -97,6 +99,20 @@ export interface Challenge {
   startDate?: string;
   endDate?: string;
   active: boolean;
+}
+
+export interface OfficialIncentiveActivity {
+  id: string;
+  officialName: string;
+  appActivityName: string;
+  amountKRW: number | null;
+  unit: string | null;
+  annualLimitKRW: number | null;
+  payoutOrganization: string;
+  payoutTiming: string;
+  sourceUrl: string;
+  sourceCheckedOn: string;
+  note?: string;
 }
 
 export interface Participation {

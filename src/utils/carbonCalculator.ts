@@ -78,20 +78,22 @@ export const INITIAL_CARBON_FACTORS: CarbonFactor[] = [
 // Tree level calculations
 export interface TreeStage {
   level: number;
+  minLevel: number;
+  maxLevel: number;
   name: string;
   emoji: string;
   minCarbon: number;
   maxCarbon: number;
   description: string;
   stageName: string;
+  fruitBearing?: boolean;
 }
 
 export const TREE_STAGES: TreeStage[] = [
-  { level: 1, name: '새싹 단계', emoji: '🌱', minCarbon: 0, maxCarbon: 5, description: '작은 씨앗이 첫 싹을 틔웠어요!', stageName: 'Sprout' },
-  { level: 2, name: '어린 줄기', emoji: '🌿', minCarbon: 5, maxCarbon: 15, description: '초록빛 잎사귀가 자라나고 있어요.', stageName: 'Sapling' },
-  { level: 3, name: '성장하는 나무', emoji: '🪴', minCarbon: 15, maxCarbon: 30, description: '줄기가 굵어지며 푸른 그늘을 만듭니다.', stageName: 'Young Tree' },
-  { level: 4, name: '풍성한 숲나무', emoji: '🌳', minCarbon: 30, maxCarbon: 50, description: '풍성한 나뭇잎이 깨끗한 산소를 뿜어내요.', stageName: 'Mature Tree' },
-  { level: 5, name: '울창한 탄소숲', emoji: '🌲', minCarbon: 50, maxCarbon: 100, description: '지구를 지키는 울창한 거목으로 완성되었어요!', stageName: 'Forest Giant' },
+  { level: 1, minLevel: 1, maxLevel: 5, name: '새싹', emoji: '🌱', minCarbon: 0, maxCarbon: 5, description: '작은 씨앗이 싹을 틔우고 있어요. 첫 실천부터 차근차근 키워봐요!', stageName: 'Sprout' },
+  { level: 2, minLevel: 6, maxLevel: 10, name: '어린 나무', emoji: '🌿', minCarbon: 5, maxCarbon: 15, description: '새잎이 돋고 줄기가 자라나는 시기예요. 꾸준한 실천이 힘이 됩니다.', stageName: 'Sapling' },
+  { level: 3, minLevel: 11, maxLevel: 15, name: '성장하는 나무', emoji: '🌳', minCarbon: 15, maxCarbon: 30, description: '줄기가 굵어지고 가지가 넓게 뻗어가고 있어요.', stageName: 'Growing Tree' },
+  { level: 4, minLevel: 16, maxLevel: 20, name: '열매 맺은 울창한 나무', emoji: '🌳', minCarbon: 30, maxCarbon: 50, description: '울창한 가지마다 열매가 열렸어요! 꾸준한 실천이 풍성한 결실로 이어졌습니다.', stageName: 'Fruitful Tree', fruitBearing: true },
 ];
 
 export function calculateTreeInfo(totalCarbon: number) {
@@ -111,9 +113,11 @@ export function calculateTreeInfo(totalCarbon: number) {
     currentStage = TREE_STAGES[3];
     calculatedLevel = Math.floor(12 + ((totalCarbon - 30) / 20) * 7);
   } else {
-    currentStage = TREE_STAGES[4];
+    currentStage = TREE_STAGES[3];
     calculatedLevel = Math.min(20, Math.floor(19 + ((totalCarbon - 50) / 50)));
   }
+
+  const levelStage = TREE_STAGES.find((treeStage) => calculatedLevel >= treeStage.minLevel && calculatedLevel <= treeStage.maxLevel) ?? TREE_STAGES[3];
 
   const minC = currentStage.minCarbon;
   const maxC = currentStage.maxCarbon;
@@ -122,7 +126,7 @@ export function calculateTreeInfo(totalCarbon: number) {
 
   return {
     level: calculatedLevel,
-    stage: currentStage,
+    stage: levelStage,
     progressPercent: Math.round(progressPercent),
     remainingCarbon: parseFloat(remainingCarbon.toFixed(1)),
     totalCarbon: parseFloat(totalCarbon.toFixed(1)),

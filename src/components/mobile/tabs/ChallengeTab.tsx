@@ -1,13 +1,16 @@
 import React, { useRef, useState } from 'react';
 import type { ChallengeCategory } from '../../../types';
 import { useApp } from '../../../context/AppContext';
-import { Search, Sparkles, Users, Zap, RotateCcw, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Search, Sparkles, Users, Zap, RotateCcw, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { OFFICIAL_INCENTIVE_ACTIVITIES } from '../../../data/officialIncentives';
+import { getChallengeRewardPoints } from '../../../lib/challengeRewards';
 
 export const ChallengeTab: React.FC = () => {
   const { challenges, participations, setSelectedChallenge, setChallengeToVerify, setIsVerificationOpen } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentRecIndex, setCurrentRecIndex] = useState(0);
+  const [isOfficialCatalogOpen, setIsOfficialCatalogOpen] = useState(false);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
 
   const categoryTabs: { id: ChallengeCategory; label: string; icon: string }[] = [
@@ -20,7 +23,7 @@ export const ChallengeTab: React.FC = () => {
 
   // Top 3 Recommended Challenges
   const recommendedTop3 = challenges
-    .filter((c) => c.isRecommended || c.isPopular)
+    .filter((c) => c.active && (c.isRecommended || c.isPopular))
     .slice(0, 3);
 
   const filteredChallenges = challenges.filter((c) => {
@@ -101,45 +104,37 @@ export const ChallengeTab: React.FC = () => {
 
                 <div className="flex items-center justify-between pt-2 border-t border-white/20 text-xs relative z-10">
                   <div className="flex items-center space-x-2.5 font-mono font-medium text-emerald-100">
-                    <span>
-                      절감: <b>{ch.carbonReduction.toFixed(1)}kg</b>
-                    </span>
-                    <span>•</span>
                     <span className="text-amber-300 font-bold flex items-center gap-0.5">
                       <Zap className="w-3 h-3 fill-amber-300" />
-                      +{ch.rewardPoints}P
+                      +{getChallengeRewardPoints(ch).toLocaleString()}P
                     </span>
                   </div>
 
                   {/* Action Button */}
-                  <button
-                    onClick={(e) => {
-                      if (completedCount > 0 || isJoined) {
-                        handleOpenVerifyDirectly(ch, e);
-                      } else {
-                        e.stopPropagation();
-                        setSelectedChallenge(ch);
-                      }
-                    }}
-                    className="px-4 py-2 bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
-                  >
-                    {completedCount > 0 ? (
-                      <>
-                        <RotateCcw className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>다시 도전 (총 {completedCount}회)</span>
-                      </>
-                    ) : isJoined ? (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span>인증하기</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>도전하기</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </>
+                  <div className="flex items-center gap-1.5">
+                    {completedCount > 0 && (
+                      <span className="rounded-full bg-white/20 px-2 py-1 text-[10px] font-extrabold text-white">{completedCount}회 참여</span>
                     )}
-                  </button>
+                    <button
+                      onClick={(e) => {
+                        if (isJoined || completedCount > 0) {
+                          handleOpenVerifyDirectly(ch, e);
+                        } else {
+                          e.stopPropagation();
+                          setSelectedChallenge(ch);
+                        }
+                      }}
+                      className="px-3 py-2 bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                    >
+                      {isJoined ? (
+                        <><Sparkles className="w-3.5 h-3.5 text-amber-500" /><span>인증하기</span></>
+                      ) : completedCount > 0 ? (
+                        <><RotateCcw className="w-3.5 h-3.5 text-emerald-700" /><span>다시 참여하기</span></>
+                      ) : (
+                        <><span>도전하기</span><ChevronRight className="w-3.5 h-3.5" /></>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -198,6 +193,47 @@ export const ChallengeTab: React.FC = () => {
         </button>
       </div>
 
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+        <button
+          type="button"
+          aria-expanded={isOfficialCatalogOpen}
+          onClick={() => setIsOfficialCatalogOpen((open) => !open)}
+          className="flex w-full items-center justify-between px-4 py-3 text-left"
+        >
+          <span>
+            <span className="block text-xs font-extrabold text-slate-800">공식 인센티브 활동 기준</span>
+            <span className="mt-0.5 block text-[10px] text-slate-500">2026년 기준 · {OFFICIAL_INCENTIVE_ACTIVITIES.length}개 활동</span>
+          </span>
+          <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${isOfficialCatalogOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {isOfficialCatalogOpen && (
+          <div className="border-t border-slate-100 px-3 pb-3">
+            <p className="px-1 py-2 text-[10px] leading-relaxed text-slate-500">
+              공식 참여기업에서 인정·등록하는 활동의 기준입니다. GreenStep P는 단가와 실천량을 환산한 참고값이며, 실제 지급액은 참여 실적과 예산에 따라 달라질 수 있습니다.
+            </p>
+            <div className="max-h-64 divide-y divide-slate-100 overflow-y-auto">
+              {OFFICIAL_INCENTIVE_ACTIVITIES.map((activity) => (
+                <div key={activity.id} className="flex items-center justify-between gap-3 px-1 py-2">
+                  <span className="min-w-0 text-[11px] font-semibold text-slate-700">{activity.officialName}</span>
+                  <span className="shrink-0 text-right text-[11px] font-extrabold text-emerald-700">
+                    {activity.amountKRW !== null && activity.unit
+                      ? `${activity.amountKRW.toLocaleString()}원 / ${activity.unit}`
+                      : activity.note ?? '운영계획 확인'}
+                    {activity.annualLimitKRW !== null && (
+                      <span className="block text-[9px] font-medium text-slate-500">연 {activity.annualLimitKRW.toLocaleString()}원 상한</span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="px-1 pt-2 text-[9px] text-slate-400">
+              지급주체: 한국환경산업기술원 · 실천 활동 후 익월 말일부터 지급 ·{' '}
+              <a href={OFFICIAL_INCENTIVE_ACTIVITIES[0].sourceUrl} target="_blank" rel="noreferrer" className="underline">공식 안내</a>
+            </p>
+          </div>
+        )}
+      </section>
+
       {/* 5. Main Challenge Cards Grid */}
       <div className="space-y-3">
         {filteredChallenges.length === 0 ? (
@@ -236,13 +272,6 @@ export const ChallengeTab: React.FC = () => {
                         {ch.categoryIcon} {ch.categoryName}
                       </span>
 
-                      {/* Completed Badge Indicator */}
-                      {completedCount > 0 && (
-                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/90 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-0.5">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          <span>{completedCount}회 실천</span>
-                        </span>
-                      )}
                     </div>
 
                     <h4 className="font-extrabold text-sm text-slate-800 tracking-tight mt-1 truncate">
@@ -254,14 +283,10 @@ export const ChallengeTab: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                  <div className="flex items-center space-x-2 text-[11px]">
-                    <span className="font-mono text-emerald-700 font-bold">
-                      {(ch.carbonReduction).toFixed(1)}kg CO₂e
-                    </span>
-                    <span className="text-slate-300">•</span>
+                <div className="flex items-center space-x-2 text-[11px]">
                     <span className="font-mono text-amber-600 font-bold flex items-center gap-0.5">
                       <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
-                      +{ch.rewardPoints}P
+                      +{getChallengeRewardPoints(ch).toLocaleString()}P
                     </span>
                     <span className="text-slate-300">•</span>
                     <span className="text-slate-400 flex items-center gap-0.5">
@@ -271,37 +296,38 @@ export const ChallengeTab: React.FC = () => {
                   </div>
 
                   {/* Redesigned Button State */}
-                  <button
-                    onClick={(e) => {
-                      if (completedCount > 0 || isJoined) {
-                        handleOpenVerifyDirectly(ch, e);
-                      } else {
-                        e.stopPropagation();
-                        setSelectedChallenge(ch);
-                      }
-                    }}
-                    className={`px-3.5 py-1.5 rounded-xl font-bold text-xs shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center gap-1 ${
-                      completedCount > 0
-                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-600/20'
-                        : isJoined
-                        ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
-                        : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
-                    }`}
-                  >
-                    {completedCount > 0 ? (
-                      <>
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>다시 도전 ↻</span>
-                      </>
-                    ) : isJoined ? (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>인증하기</span>
-                      </>
-                    ) : (
-                      '도전하기'
+                  <div className="flex items-center gap-1.5">
+                    {completedCount > 0 && (
+                      <span className="shrink-0 rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-extrabold text-emerald-800 border border-emerald-100">
+                        {completedCount}회 참여
+                      </span>
                     )}
-                  </button>
+                    <button
+                      onClick={(e) => {
+                        if (isJoined || completedCount > 0) {
+                          handleOpenVerifyDirectly(ch, e);
+                        } else {
+                          e.stopPropagation();
+                          setSelectedChallenge(ch);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl font-bold text-xs shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                        isJoined
+                          ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
+                          : completedCount > 0
+                          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-600/20'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                      }`}
+                    >
+                      {isJoined ? (
+                        <><Sparkles className="w-3.5 h-3.5" /><span>인증하기</span></>
+                      ) : completedCount > 0 ? (
+                        <><RotateCcw className="w-3.5 h-3.5" /><span>다시 참여하기</span></>
+                      ) : (
+                        '도전하기'
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             );

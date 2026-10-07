@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
+import { getChallengeRewardPoints } from '../../../lib/challengeRewards';
 import type { PostCategory } from '../../../types';
 import { supabaseBoard } from '../../../lib/supabase';
 import { Camera, Image as ImageIcon, Sparkles, X, MessageSquarePlus } from 'lucide-react';
@@ -68,7 +69,6 @@ export const WritePostModal: React.FC<WritePostModalProps> = ({ isOpen, onClose,
       content,
       imageUrl: selectedImage || samplePhotos[0],
       challengeTag: category === 'verification' ? selectedChallengeTag : undefined,
-      carbonSavedTag: category === 'verification' ? 0.3 : undefined,
     });
 
     onPostCreated();
@@ -129,7 +129,7 @@ export const WritePostModal: React.FC<WritePostModalProps> = ({ isOpen, onClose,
               >
                 {challenges.map((ch) => (
                   <option key={ch.id} value={ch.title}>
-                    {ch.categoryIcon} {ch.title} (-{ch.carbonReduction}kg)
+                    {ch.categoryIcon} {ch.title} (+{getChallengeRewardPoints(ch).toLocaleString()}P)
                   </option>
                 ))}
               </select>

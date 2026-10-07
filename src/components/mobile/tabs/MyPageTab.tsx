@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { Avatar } from '../../common/Avatar';
 import { CUTE_AVATARS } from '../../../types';
+import { FriendsPanel } from './FriendsPanel';
 import {
   Award,
   Bell,
@@ -109,6 +110,8 @@ export const MyPageTab: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <FriendsPanel user={user} />
 
       {/* Main Settings & Info Menu List */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-100">

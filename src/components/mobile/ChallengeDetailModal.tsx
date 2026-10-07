@@ -1,6 +1,8 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Camera, CheckCircle2, RotateCcw, ShieldCheck, Sparkles, Users, X, Zap } from 'lucide-react';
+import { getOfficialIncentiveActivity } from '../../data/officialIncentives';
+import { getChallengeRewardPoints } from '../../lib/challengeRewards';
 
 export const ChallengeDetailModal: React.FC = () => {
   const {
@@ -13,6 +15,9 @@ export const ChallengeDetailModal: React.FC = () => {
   } = useApp();
 
   if (!selectedChallenge) return null;
+
+  const officialIncentive = getOfficialIncentiveActivity(selectedChallenge.officialIncentiveId);
+  const challengeRewardPoints = getChallengeRewardPoints(selectedChallenge);
 
   const completedCount = participations.filter(
     (p) => p.challengeId === selectedChallenge.id && p.status === 'completed'
@@ -70,18 +75,12 @@ export const ChallengeDetailModal: React.FC = () => {
         {/* Content Body */}
         <div className="p-6 space-y-4">
           {/* Main Info Metrics Grid */}
-          <div className="grid grid-cols-3 gap-2 p-3 bg-emerald-50/80 rounded-2xl border border-emerald-100 text-center">
-            <div className="p-2">
-              <span className="block text-[10px] text-emerald-700 font-bold">예상 탄소절감량</span>
-              <span className="text-sm font-black text-emerald-900 font-mono">
-                {selectedChallenge.carbonReduction.toFixed(1)}kg CO₂e
-              </span>
-            </div>
-            <div className="p-2 border-x border-emerald-200/60">
-              <span className="block text-[10px] text-emerald-700 font-bold">획득 포인트</span>
+          <div className="grid grid-cols-2 gap-2 p-3 bg-emerald-50/80 rounded-2xl border border-emerald-100 text-center">
+            <div className="p-2 border-r border-emerald-200/60">
+              <span className="block text-[10px] text-emerald-700 font-bold">GreenStep 포인트</span>
               <span className="text-sm font-black text-amber-600 font-mono flex items-center justify-center gap-0.5">
                 <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                +{selectedChallenge.rewardPoints}P
+                +{challengeRewardPoints.toLocaleString()}P
               </span>
             </div>
             <div className="p-2">
@@ -92,6 +91,30 @@ export const ChallengeDetailModal: React.FC = () => {
               </span>
             </div>
           </div>
+
+          {officialIncentive && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="block text-xs font-extrabold text-amber-950">공식 인센티브 기준</span>
+                  <span className="mt-1 block text-[11px] text-amber-900">{officialIncentive.officialName}</span>
+                </div>
+                <span className="shrink-0 text-sm font-black text-amber-800">
+                  {officialIncentive.amountKRW !== null && officialIncentive.unit
+                    ? `${officialIncentive.amountKRW.toLocaleString()}원 / ${officialIncentive.unit}`
+                    : officialIncentive.note}
+                </span>
+              </div>
+              {officialIncentive.amountKRW !== null && officialIncentive.unit && (
+                <p className="mt-1 text-[10px] font-semibold text-amber-900">
+                  이 챌린지 기준 {selectedChallenge.officialIncentiveQuantity ?? 1}{officialIncentive.unit} · +{challengeRewardPoints.toLocaleString()}P
+                </p>
+              )}
+              <p className="mt-2 text-[10px] leading-relaxed text-amber-800">
+                GreenStep P는 공식 단가를 1원당 1P로 환산한 참고값입니다. 공식 참여기업의 실적 인정이 필요하며 실제 지급액은 참여 실적과 예산 등에 따라 달라질 수 있습니다.
+              </p>
+            </div>
+          )}
 
           {/* Goal & Verification Specs */}
           <div className="space-y-2.5 text-xs text-slate-700 font-medium">
@@ -147,12 +170,12 @@ export const ChallengeDetailModal: React.FC = () => {
               </div>
             )}
 
-            {completedCount > 0 && (
+            {completedCount > 0 && !isJoined && (
               <div className="space-y-2">
                 <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold rounded-xl flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>오늘 총 {completedCount}회 실천 성공!</span>
+                    <span>누적 {completedCount}회 참여 완료!</span>
                   </span>
                   <span className="text-[10px] bg-emerald-200/80 text-emerald-950 px-2 py-0.5 rounded font-black">
                     상시 재도전 가능
@@ -164,7 +187,7 @@ export const ChallengeDetailModal: React.FC = () => {
                   className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all active:scale-95 cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  <span>다시 도전하기 (추가 사진 인증) ↻</span>
+                  <span>다시 참여하기 (추가 인증) ↻</span>
                 </button>
               </div>
             )}

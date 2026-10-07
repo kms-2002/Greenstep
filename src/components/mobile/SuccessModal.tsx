@@ -7,7 +7,7 @@ export const SuccessModal: React.FC = () => {
 
   if (!isSuccessModalOpen || !completionResult) return null;
 
-  const { challengeTitle, carbonSaved, pointsEarned, unlockedBadge, leveledUp, newLevel } = completionResult;
+  const { challengeTitle, pointsEarned, unlockedBadge, leveledUp, newLevel } = completionResult;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
@@ -28,7 +28,7 @@ export const SuccessModal: React.FC = () => {
         </p>
 
         {/* Reward Summary Pill Container */}
-        <div className="my-5 p-4 bg-emerald-50 rounded-2xl border border-emerald-200/80 space-y-2">
+        <div className="my-5 p-4 bg-emerald-50 rounded-2xl border border-emerald-200/80">
           <div className="flex items-center justify-between text-emerald-900 font-bold text-sm">
             <span className="flex items-center gap-1.5 text-xs text-emerald-700">
               <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
@@ -37,17 +37,6 @@ export const SuccessModal: React.FC = () => {
             <span className="text-base text-amber-600 font-extrabold">+{pointsEarned}P</span>
           </div>
 
-          <div className="h-px bg-emerald-200/60" />
-
-          <div className="flex items-center justify-between text-emerald-900 font-bold text-sm">
-            <span className="flex items-center gap-1.5 text-xs text-emerald-700">
-              <TreePine className="w-4 h-4 text-emerald-600" />
-              탄소절감량
-            </span>
-            <span className="text-base text-emerald-700 font-extrabold">
-              +{carbonSaved.toFixed(1)}kg CO₂e
-            </span>
-          </div>
         </div>
 
         {/* Level Up Notification if triggered */}

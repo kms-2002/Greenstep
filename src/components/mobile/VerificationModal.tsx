@@ -125,9 +125,6 @@ export const VerificationModal: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <span className="text-[10px] bg-emerald-700 text-emerald-100 font-mono px-2 py-0.5 rounded">
-                      +{(challengeToVerify.carbonReduction).toFixed(1)}kg CO₂e
-                    </span>
                   </div>
                 )}
               </>

@@ -16,9 +16,10 @@ import {
   INITIAL_USER,
 } from '../mock/initialData';
 import { INITIAL_CARBON_FACTORS, calculateTreeInfo } from '../utils/carbonCalculator';
+import { getChallengeRewardPoints } from '../lib/challengeRewards';
 import confetti from 'canvas-confetti';
 
-export type TabType = 'home' | 'challenge' | 'ranking' | 'board' | 'my';
+export type TabType = 'home' | 'challenge' | 'ranking' | 'quiz' | 'my';
 export type ViewMode = 'mobile' | 'admin';
 
 interface CompletionResult {
@@ -98,7 +99,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.some((c: Challenge) => c.title.includes('진주') || c.title.includes('GNU'))) {
-        return parsed;
+        const savedIds = new Set(parsed.map((challenge: Challenge) => challenge.id));
+        const migrated = parsed.map((challenge: Challenge) => {
+          const canonical = INITIAL_CHALLENGES.find((initial) => initial.id === challenge.id);
+          if (!canonical) return challenge;
+          return {
+            ...challenge,
+            title: canonical.title,
+            category: canonical.category,
+            categoryName: canonical.categoryName,
+            categoryIcon: canonical.categoryIcon,
+            description: canonical.description,
+            detailGuide: canonical.detailGuide,
+            unitDescription: canonical.unitDescription,
+            verificationMethod: canonical.verificationMethod,
+            rewardPoints: canonical.rewardPoints,
+            officialIncentiveId: canonical.officialIncentiveId,
+            officialIncentiveQuantity: canonical.officialIncentiveQuantity,
+            active: canonical.active,
+          };
+        });
+        return [
+          ...migrated,
+          ...INITIAL_CHALLENGES.filter((challenge) => challenge.active && !savedIds.has(challenge.id)),
+        ];
       }
     }
     return INITIAL_CHALLENGES;
@@ -265,7 +289,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!targetChallenge) return;
 
     const carbonSaved = targetChallenge.carbonReduction;
-    const pointsEarned = targetChallenge.rewardPoints;
+    const pointsEarned = getChallengeRewardPoints(targetChallenge);
 
     const prevTree = calculateTreeInfo(user.totalCarbonReduction);
 

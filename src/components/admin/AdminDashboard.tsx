@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import type { Challenge, ChallengeCategory } from '../../types';
+import { getChallengeRewardPoints } from '../../lib/challengeRewards';
 import {
   BarChart,
   Bar,
@@ -102,7 +103,7 @@ export const AdminDashboard: React.FC = () => {
     setFormDesc(ch.description);
     setFormGuide(ch.detailGuide);
     setFormCarbon(String(ch.carbonReduction));
-    setFormPoints(String(ch.rewardPoints));
+    setFormPoints(String(getChallengeRewardPoints(ch)));
     setFormUnit(ch.unitDescription);
     setIsAddModalOpen(true);
   };
@@ -352,7 +353,7 @@ export const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="p-3.5 font-bold text-white">{ch.title}</td>
                     <td className="p-3.5 font-mono text-emerald-400">{ch.carbonReduction.toFixed(1)}kg CO₂e</td>
-                    <td className="p-3.5 font-mono text-amber-400">+{ch.rewardPoints}P</td>
+                    <td className="p-3.5 font-mono text-amber-400">+{getChallengeRewardPoints(ch).toLocaleString()}P</td>
                     <td className="p-3.5 font-mono">{ch.participantsCount}명</td>
                     <td className="p-3.5">
                       <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded text-[10px] font-bold">
@@ -486,14 +487,18 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-bold mb-1">획득 포인트 (P)</label>
+                  <label className="block text-slate-400 font-bold mb-1">{editingChallenge?.officialIncentiveId ? '공식 인센티브 환산 포인트 (P)' : '획득 포인트 (P)'}</label>
                   <input
                     type="number"
                     required
                     value={formPoints}
                     onChange={(e) => setFormPoints(e.target.value)}
+                    disabled={Boolean(editingChallenge?.officialIncentiveId)}
                     className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500 font-mono"
                   />
+                  {editingChallenge?.officialIncentiveId && (
+                    <p className="mt-1 text-[10px] text-slate-500">공식 단가와 실천 단위로 자동 계산됩니다.</p>
+                  )}
                 </div>
               </div>
 
