@@ -39,27 +39,46 @@ Deno.serve(async (request) => {
       availableChallenges: Array.isArray(body.challenges) ? body.challenges.slice(0, 30) : [],
     };
     const model = Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash';
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: `너는 GreenStep의 친근한 한국어 환경 실천 도우미 하모야. 사용자의 질문에 먼저 직접 답하고, 제공된 프로필·최근 실천·활성 챌린지에 맞춰 간결하고 구체적으로 안내해. 챌린지 포인트는 전달된 데이터에 있는 수치만 안내하고, 실제 포인트 지급을 확정적으로 약속하지 마. 데이터에 없는 진주시 정책이나 학교 정보를 사실처럼 만들지 말고 모른다고 말해. 활동 맥락은 다음 JSON이야: ${JSON.stringify(context).slice(0, 12000)}` }],
-          },
-          contents: [
-            ...history.map((item) => ({ role: item.role, parts: [{ text: item.text }] })),
-            { role: 'user', parts: [{ text: message }] },
-          ],
-          generationConfig: { temperature: 0.6, maxOutputTokens: 700 },
-        }),
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const geminiBody = JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: `너는 GreenStep의 친근한 한국어 환경 실천 도우미 하모야. 사용자의 질문에 먼저 직접 답하고, 제공된 프로필·최근 실천·활성 챌린지에 맞춰 간결하고 구체적으로 안내해. 챌린지 포인트는 전달된 데이터에 있는 수치만 안내하고, 실제 포인트 지급을 확정적으로 약속하지 마. 데이터에 없는 진주시 정책이나 학교 정보를 사실처럼 만들지 말고 모른다고 말해. 활동 맥락은 다음 JSON이야: ${JSON.stringify(context).slice(0, 12000)}` }],
       },
-    );
+      contents: [
+        ...history.map((item) => ({ role: item.role, parts: [{ text: item.text }] })),
+        { role: 'user', parts: [{ text: message }] },
+      ],
+      generationConfig: { temperature: 0.6, maxOutputTokens: 700 },
+    });
 
+    let geminiResponse: Response | null = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        geminiResponse = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          body: geminiBody,
+        });
+      } catch (error) {
+        if (attempt === 2) {
+          console.error('Gemini connection failed:', error instanceof Error ? error.message : 'unknown error');
+          return jsonResponse({ error: 'Gemini 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.' }, 502);
+        }
+      }
+
+      if (geminiResponse?.ok) break;
+      const isRetryable = geminiResponse && [429, 500, 502, 503, 504].includes(geminiResponse.status);
+      if (!isRetryable || attempt === 2) break;
+      await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
+    }
+
+    if (!geminiResponse) return jsonResponse({ error: 'Gemini 응답을 받지 못했습니다. 잠시 후 다시 시도해 주세요.' }, 502);
     if (!geminiResponse.ok) {
-      // Do not return upstream payloads, which may contain sensitive diagnostics.
-      return jsonResponse({ error: 'Gemini API 요청이 실패했습니다. 키 권한, 모델명, 사용량 한도를 확인해 주세요.' }, 502);
+      console.error(`Gemini API returned HTTP ${geminiResponse.status}`);
+      const message = geminiResponse.status === 503 || geminiResponse.status === 429
+        ? 'Gemini 서비스가 혼잡합니다. 잠시 후 다시 시도해 주세요.'
+        : `Gemini API 오류(HTTP ${geminiResponse.status})가 발생했습니다. 배포 설정과 API 키 권한을 확인해 주세요.`;
+      return jsonResponse({ error: message }, 502);
     }
 
     const result = await geminiResponse.json();
