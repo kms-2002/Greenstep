@@ -7,18 +7,22 @@ const SUPABASE_AUTH_STORAGE_KEY = 'greenstep_supabase_users_v1';
 export const INITIAL_AUTH_USERS: AuthUser[] = [
   {
     studentId: '20230101',
+    memberType: 'student',
     password: '1234',
     nickname: '지구지키미',
     university: '경상국립대학교',
+    college: '경영대학',
     department: '경영정보학과',
     grade: '3학년',
     createdAt: '2026-09-01T00:00:00Z',
   },
   {
     studentId: '20230102',
+    memberType: 'student',
     password: '1234',
     nickname: '박지구',
     university: '경상국립대학교',
+    college: '경영대학',
     department: '경영학부',
     grade: '2학년',
     createdAt: '2026-09-02T00:00:00Z',

@@ -281,7 +281,7 @@ export const HomeTab: React.FC = () => {
           <span className="text-xs font-bold text-slate-800">그린퀴즈</span>
         </button>
 
-        {/* Button 6: 학과랭킹 */}
+        {/* Button 6: 전체 랭킹 */}
         <button
           onClick={() => setActiveTab('ranking')}
           className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
@@ -289,7 +289,7 @@ export const HomeTab: React.FC = () => {
           <div className="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center">
             <Trophy className="w-5 h-5 text-rose-600 fill-rose-500" />
           </div>
-          <span className="text-xs font-bold text-slate-800">학과랭킹</span>
+          <span className="text-xs font-bold text-slate-800">전체 랭킹</span>
         </button>
 
         {/* Button 7: FAQ */}

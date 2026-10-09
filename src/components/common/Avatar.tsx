@@ -7,7 +7,7 @@ interface AvatarProps {
   className?: string;
 }
 
-export const Avatar: React.FC<AvatarProps> = ({ avatarId = 'avatar-jinu', size = 'md', className = '' }) => {
+export const Avatar: React.FC<AvatarProps> = ({ avatarId = 'avatar-hamo', size = 'md', className = '' }) => {
   const target = CUTE_AVATARS.find((a) => a.id === avatarId || a.name === avatarId) || CUTE_AVATARS[0];
 
   const sizeClasses = {

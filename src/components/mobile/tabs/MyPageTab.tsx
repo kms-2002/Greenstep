@@ -37,7 +37,7 @@ export const MyPageTab: React.FC = () => {
             className="relative cursor-pointer group"
             title="프로필 아이콘 변경"
           >
-            <Avatar avatarId={user.profileAvatarId || 'avatar-jinu'} size="xl" className="ring-2 ring-emerald-400" />
+            <Avatar avatarId={user.profileAvatarId || 'avatar-hamo'} size="xl" className="ring-2 ring-emerald-400" />
             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center border border-white text-white text-[10px] shadow-sm">
               ✏️
             </div>
@@ -56,7 +56,7 @@ export const MyPageTab: React.FC = () => {
             <p className="text-xs text-emerald-200 mt-0.5 flex items-center gap-1 truncate">
               <GraduationCap className="w-3.5 h-3.5" />
               <span>
-                {user.university} {user.department} ({user.grade})
+                {user.memberType === 'citizen' ? '진주시민' : [user.university, user.college, user.department].filter(Boolean).join(' · ')}{user.memberType !== 'citizen' && ` (${user.grade})`}
               </span>
             </p>
 
@@ -261,7 +261,7 @@ export const MyPageTab: React.FC = () => {
 
             <div className="grid grid-cols-5 gap-2 pt-1">
               {CUTE_AVATARS.map((av) => {
-                const isSelected = (user.profileAvatarId || 'avatar-jinu') === av.id;
+                const isSelected = (user.profileAvatarId || 'avatar-hamo') === av.id;
                 return (
                   <button
                     key={av.id}

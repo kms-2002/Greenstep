@@ -4,7 +4,9 @@ import { JINJU_OFFICIAL_CHALLENGES } from './jinjuOfficialChallenges';
 export const INITIAL_USER: User = {
   id: 'user-001',
   nickname: '지구지키미',
+  memberType: 'student',
   university: '경상국립대학교',
+  college: '경영대학',
   department: '경영정보학과',
   grade: '3학년',
   level: 12,
@@ -14,7 +16,7 @@ export const INITIAL_USER: User = {
   weekCarbonReduction: 8.4,
   consecutiveDays: 5,
   lastActiveDate: new Date().toISOString().split('T')[0],
-  profileAvatarId: 'avatar-jinu',
+  profileAvatarId: 'avatar-hamo',
 };
 
 // Jinju City & Gyeongsang National University (GNU) Specific Eco Challenges
@@ -247,6 +249,10 @@ export const INITIAL_PERSONAL_RANKS: PersonalRank[] = [
   { rank: 5, userId: 'u-105', nickname: '정클린', university: '경상국립대학교', department: '국제통상학과', carbonReduction: 29.1, points: 810, avatarUrl: 'avatar-tree' },
   { rank: 6, userId: 'u-106', nickname: '강그린', university: '경상국립대학교', department: '경영정보학과', carbonReduction: 26.5, points: 740, avatarUrl: 'avatar-sprout' },
   { rank: 7, userId: 'u-107', nickname: '윤텀블', university: '경상국립대학교', department: '경영학부', carbonReduction: 24.3, points: 680, avatarUrl: 'avatar-tumbler' },
+  { rank: 8, userId: 'u-108', nickname: '새싹교대생', university: '진주교육대학교', department: '초등교육과', carbonReduction: 22.9, points: 660, avatarUrl: 'avatar-sprout' },
+  { rank: 9, userId: 'u-109', nickname: '연암그린', university: '연암공과대학교', department: '스마트전기전자공학과', carbonReduction: 19.7, points: 590, avatarUrl: 'avatar-rider' },
+  { rank: 10, userId: 'u-110', nickname: '건강한진주', university: '진주보건대학교', department: '간호학부', carbonReduction: 17.6, points: 520, avatarUrl: 'avatar-tree' },
+  { rank: 11, userId: 'u-111', nickname: '폴리텍초록', university: '한국폴리텍대학 진주캠퍼스', department: '자동화시스템과', carbonReduction: 15.2, points: 460, avatarUrl: 'avatar-tumbler' },
 ];
 
 // GNU Business College 5 Departments Ranks

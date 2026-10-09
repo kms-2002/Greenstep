@@ -14,10 +14,12 @@ export const AuthModal: React.FC = () => {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [nickname, setNickname] = useState('');
+  const [memberType, setMemberType] = useState<'student' | 'citizen'>('student');
   const [university, setUniversity] = useState('경상국립대학교');
+  const [college, setCollege] = useState('경영대학');
   const [department, setDepartment] = useState('경영정보학과');
   const [grade, setGrade] = useState('3학년');
-  const [selectedAvatarId, setSelectedAvatarId] = useState('avatar-jinu');
+  const [selectedAvatarId, setSelectedAvatarId] = useState('avatar-hamo');
 
   // Error / Success Feedback State
   const [errorMessage, setErrorMessage] = useState('');
@@ -32,13 +34,12 @@ export const AuthModal: React.FC = () => {
     }
   }, [isAuthModalOpen, authInitialTab]);
 
-  // GNU Business College 5 Departments
-  const gnuDepartments = [
-    '경영학부',
-    '경영정보학과',
-    '회계세무학부',
-    '국제통상학과',
-    '스마트유통물류학과',
+  const jinjuUniversities = [
+    '경상국립대학교',
+    '진주교육대학교',
+    '연암공과대학교',
+    '진주보건대학교',
+    '한국폴리텍대학 진주캠퍼스',
   ];
 
   if (!isAuthModalOpen) return null;
@@ -77,10 +78,12 @@ export const AuthModal: React.FC = () => {
       const res = supabaseAuth.signUp({
         studentId: studentId.trim(),
         password,
+        memberType,
         nickname: nickname.trim(),
-        university,
-        department,
-        grade,
+        university: memberType === 'citizen' ? '진주시민' : university.trim(),
+        college: memberType === 'citizen' ? '' : college.trim(),
+        department: memberType === 'citizen' ? '' : department.trim(),
+        grade: memberType === 'citizen' ? '시민' : grade,
         profileAvatarId: selectedAvatarId,
       });
 
@@ -91,7 +94,7 @@ export const AuthModal: React.FC = () => {
 
       setSuccessMessage('Supabase DB에 회원가입 정보가 기록되었습니다!');
       setTimeout(() => {
-        login(nickname.trim(), university, department, grade, studentId.trim(), selectedAvatarId);
+        login(nickname.trim(), memberType === 'citizen' ? '진주시민' : university.trim(), memberType === 'citizen' ? '' : department.trim(), memberType === 'citizen' ? '시민' : grade, studentId.trim(), selectedAvatarId, college.trim(), memberType);
       }, 700);
 
     } else {
@@ -122,7 +125,9 @@ export const AuthModal: React.FC = () => {
             registeredUser.department,
             registeredUser.grade,
             registeredUser.studentId,
-            registeredUser.profileAvatarId
+            registeredUser.profileAvatarId,
+            registeredUser.college,
+            registeredUser.memberType
           );
         }, 500);
       }
@@ -226,14 +231,14 @@ export const AuthModal: React.FC = () => {
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
               <Lock className="w-3.5 h-3.5 text-emerald-600" />
-              학번 (Student ID)
+              {isSignup && memberType === 'citizen' ? '아이디' : '학번 (Student ID)'}
             </label>
             <input
               type="text"
               required
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              placeholder="예: 2024101234"
+              placeholder={isSignup && memberType === 'citizen' ? '로그인에 사용할 아이디' : '예: 2024101234'}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
             />
           </div>
@@ -324,41 +329,53 @@ export const AuthModal: React.FC = () => {
                 />
               </div>
 
-              {/* University Select */}
+              {/* Member type */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
                   <GraduationCap className="w-3.5 h-3.5 text-emerald-600" />
-                  대학교
+                  참여 유형
                 </label>
                 <select
-                  value={university}
-                  onChange={(e) => setUniversity(e.target.value)}
+                  value={memberType}
+                  onChange={(e) => setMemberType(e.target.value as 'student' | 'citizen')}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
                 >
-                  <option value="경상국립대학교">경상국립대학교 (GNU)</option>
+                  <option value="student">진주시 소재 대학 학생</option>
+                  <option value="citizen">진주시민</option>
                 </select>
               </div>
 
-              {/* Department & Grade */}
-              <div className="grid grid-cols-2 gap-3">
+              {memberType === 'student' && <>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
                     <Building className="w-3.5 h-3.5 text-emerald-600" />
-                    경영대학 학과
+                    대학교
                   </label>
-                  <select
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all truncate"
-                  >
-                    {gnuDepartments.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    required
+                    value={university}
+                    onChange={(e) => setUniversity(e.target.value)}
+                    placeholder="예: 경상국립대학교"
+                    list="jinju-universities"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+                  />
+                  <datalist id="jinju-universities">{jinjuUniversities.map((school) => <option key={school} value={school} />)}</datalist>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">단과대학</label>
+                    <input required value={college} onChange={(e) => setCollege(e.target.value)} placeholder="예: 경영대학" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">학과·학부</label>
+                    <input required value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="예: 경영정보학과" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" />
+                  </div>
+                </div>
+              </>}
+
+              {/* Grade */}
+              {memberType === 'student' && <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">학년</label>
                   <select
@@ -373,7 +390,9 @@ export const AuthModal: React.FC = () => {
                     <option value="대학원생">대학원생</option>
                   </select>
                 </div>
-              </div>
+                <div className="flex items-end text-[10px] leading-relaxed text-slate-400">학교명은 검색 목록에서 고르거나 직접 입력할 수 있어요.</div>
+              </div>}
+              {memberType === 'citizen' && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-[10px] leading-relaxed text-emerald-800">진주시민 랭킹에 참여하는 데모 계정입니다. 현재 화면에서는 별도의 거주 인증을 진행하지 않습니다.</p>}
             </>
           )}
 

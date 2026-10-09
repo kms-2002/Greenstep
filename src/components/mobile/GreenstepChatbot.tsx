@@ -9,7 +9,7 @@ type ChatMessage = { id: number; role: 'assistant' | 'user'; text: string };
 const welcomeMessage: ChatMessage = {
   id: 1,
   role: 'assistant',
-  text: '안녕! 경상국립대학교 마스코트 지누야 🦕\n챌린지와 포인트, 나무 성장에 대해 궁금한 점을 물어봐!',
+  text: '안녕! 진주시 마스코트 하모야 🦦\n챌린지와 포인트, 나무 성장에 대해 궁금한 점을 물어봐!',
 };
 
 export const GreenstepChatbot: React.FC = () => {
@@ -80,19 +80,19 @@ export const GreenstepChatbot: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          aria-label="AI 지누 챗봇 열기"
+          aria-label="AI 하모 챗봇 열기"
           className="absolute bottom-[70px] right-3 z-40 flex flex-col items-center drop-shadow-[0_4px_12px_rgba(15,23,42,0.22)] transition-transform hover:scale-105 active:scale-95"
         >
           <span className="mb-[-5px] rounded-md bg-[#559ca8] px-2 py-1 text-[10px] font-black leading-none tracking-wide text-white">Ask AI GNU!</span>
-          <img src="/jinu_clean.png" alt="지누 공룡 챗봇" className="h-[62px] w-[62px] object-contain drop-shadow-md" />
+          <img src="/hamo.png" alt="하모 챗봇" className="h-[62px] w-[62px] object-contain drop-shadow-md" />
         </button>
       )}
 
       {isOpen && (
         <section role="dialog" aria-modal="false" aria-labelledby="greenstep-chat-title" className="absolute bottom-[72px] right-3 z-40 flex h-[58%] min-h-[350px] max-h-[490px] w-[calc(100%-24px)] max-w-[340px] flex-col overflow-hidden rounded-[28px] bg-[#aab6c7] shadow-2xl ring-1 ring-slate-900/10 animate-scaleUp">
           <header className="flex h-14 shrink-0 items-center gap-1 bg-[#4d91d0] px-3 text-white shadow-sm">
-            <img src="/jinu_clean.png" alt="" className="h-9 w-9 object-contain drop-shadow-sm" />
-            <h2 id="greenstep-chat-title" className="mr-auto text-base font-extrabold">AI 지누</h2>
+            <img src="/hamo.png" alt="" className="h-9 w-9 object-contain drop-shadow-sm" />
+            <h2 id="greenstep-chat-title" className="mr-auto text-base font-extrabold">AI 하모</h2>
             <button type="button" onClick={() => setIsLargeText((value) => !value)} aria-label="글자 크기 변경" className="rounded-full p-2 hover:bg-white/15"><Type className="h-5 w-5" /></button>
             <button type="button" onClick={() => sendMessage('도움말')} aria-label="도움말" className="rounded-full p-2 hover:bg-white/15"><CircleHelp className="h-5 w-5" /></button>
             <button type="button" onClick={resetConversation} aria-label="대화 초기화" className="rounded-full p-2 hover:bg-white/15"><RotateCcw className="h-5 w-5" /></button>
@@ -102,7 +102,7 @@ export const GreenstepChatbot: React.FC = () => {
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
             {messages.map((message) => message.role === 'assistant' ? (
               <div key={message.id} className="flex items-end gap-2">
-                <img src="/jinu_clean.png" alt="지누 공룡" className="h-8 w-8 shrink-0 object-contain drop-shadow-sm" />
+                <img src="/hamo.png" alt="하모" className="h-8 w-8 shrink-0 object-contain drop-shadow-sm" />
                 <p className={`max-w-[84%] whitespace-pre-line rounded-[24px] rounded-bl-md bg-white px-4 py-3 leading-relaxed text-slate-800 shadow-sm ${isLargeText ? 'text-base' : 'text-sm'}`}>{message.text}</p>
               </div>
             ) : (

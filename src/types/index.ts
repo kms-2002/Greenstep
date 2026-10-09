@@ -3,8 +3,10 @@ export type ChallengeCategory = 'all' | 'transport' | 'life' | 'food' | 'resourc
 export interface User {
   id: string;
   studentId?: string;
+  memberType?: 'student' | 'citizen';
   nickname: string;
   university: string;
+  college?: string;
   department: string;
   grade: string;
   level: number;
@@ -21,8 +23,10 @@ export interface User {
 export interface AuthUser {
   studentId: string;
   password?: string;
+  memberType?: 'student' | 'citizen';
   nickname: string;
   university: string;
+  college?: string;
   department: string;
   grade: string;
   profileAvatarId?: string;
@@ -40,12 +44,12 @@ export interface AvatarOption {
 
 export const CUTE_AVATARS: AvatarOption[] = [
   {
-    id: 'avatar-jinu',
-    name: '지누 마스코트',
-    icon: '🦖',
+    id: 'avatar-hamo',
+    name: '하모 마스코트',
+    icon: '🦦',
     bgColor: 'bg-[#EBF7F4] border-teal-200',
     textColor: 'text-teal-700',
-    image: '/jinu_clean.png',
+    image: '/hamo.png',
   },
   {
     id: 'avatar-sprout',

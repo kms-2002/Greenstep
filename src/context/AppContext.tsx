@@ -64,7 +64,7 @@ interface AppContextType {
   openAuthModal: (tab?: 'login' | 'signup') => void;
 
   // Actions
-  login: (nickname: string, university: string, department: string, grade: string, studentId?: string, avatarId?: string) => void;
+  login: (nickname: string, university: string, department: string, grade: string, studentId?: string, avatarId?: string, college?: string, memberType?: 'student' | 'citizen') => void;
   logout: () => void;
   updateProfile: (updated: Partial<User>) => void;
   joinChallenge: (challengeId: string) => void;
@@ -218,6 +218,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ? {
                 ...r,
                 nickname: user.nickname,
+                university: user.university,
                 department: user.department,
                 carbonReduction: user.totalCarbonReduction,
                 points: user.points,
@@ -243,17 +244,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .sort((a, b) => b.totalCarbonReduction - a.totalCarbonReduction)
         .map((d, idx) => ({ ...d, rank: idx + 1 }))
     );
-  }, [user.totalCarbonReduction, user.nickname, user.department, user.points]);
+  }, [user.totalCarbonReduction, user.nickname, user.university, user.department, user.points]);
 
-  const login = (nickname: string, university: string, department: string, grade: string, studentId?: string, avatarId?: string) => {
+  const login = (nickname: string, university: string, department: string, grade: string, studentId?: string, avatarId?: string, college?: string, memberType: 'student' | 'citizen' = 'student') => {
     setUser((prev) => ({
       ...prev,
       nickname,
+      memberType,
       university,
+      college: college || '',
       department,
       grade,
       studentId: studentId || prev.studentId || '20230101',
-      profileAvatarId: avatarId || prev.profileAvatarId || 'avatar-jinu',
+      profileAvatarId: avatarId || prev.profileAvatarId || 'avatar-hamo',
     }));
     setIsAuthenticated(true);
     setIsAuthModalOpen(false);

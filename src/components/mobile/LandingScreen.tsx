@@ -54,12 +54,12 @@ export const LandingScreen: React.FC = () => {
           </h2>
 
           <p className="text-xs text-slate-600 font-normal leading-relaxed">
-            경상국립대 경영대학과 진주시가 함께하는 친환경 실천을 자동으로 인증하고 탄소 포인트와 학과 랭킹 혜택까지 정리해드려요.
+            진주시 소재 대학과 시민이 함께하는 친환경 실천을 인증하고 탄소 포인트와 전체 랭킹을 확인해요.
           </p>
         </div>
       </div>
 
-      {/* 3. Center Section: Mascot Jinu & Floating Eco Chips */}
+      {/* 3. Center Section: Hamo & Floating Eco Chips */}
       <div className="my-1 relative flex items-center justify-center flex-1">
         {/* Soft Glowing Ambient Backdrop Circle */}
         <div className="w-64 h-64 rounded-full bg-gradient-to-tr from-[#DBF3FA]/70 via-emerald-100/50 to-white flex items-center justify-center shadow-inner relative border border-emerald-100/60">
@@ -88,8 +88,8 @@ export const LandingScreen: React.FC = () => {
           {/* Center Mascot Image (Full uncropped transparent PNG) */}
           <div className="relative z-10 w-52 h-52 flex items-center justify-center">
             <img
-              src="/jinu_clean.png"
-              alt="GreenStep 마스코트 지누"
+              src="/hamo.png"
+              alt="GreenStep 마스코트 하모"
               className="w-full h-full object-contain drop-shadow-xl hover:scale-105 transition-transform duration-300"
             />
           </div>
