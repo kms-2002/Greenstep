@@ -1,0 +1,4 @@
+[functions.greenstep-chat]
+# The prototype currently uses localStorage instead of Supabase Auth, so requests
+# cannot carry a signed-in user's Supabase JWT yet. Add server-side auth before launch.
+verify_jwt = false

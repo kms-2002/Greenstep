@@ -97,6 +97,35 @@ npm run dev
 
 ---
 
+## 🤖 Gemini 챗봇 연결
+
+챗봇은 브라우저에서 Gemini를 직접 호출하지 않습니다. API 키는 Supabase Edge Function 서버에만 저장합니다.
+
+1. Google AI Studio에서 Gemini API 키를 만들고, Gemini API로 제한된 키를 사용합니다.
+2. Supabase 프로젝트를 만든 뒤 프로젝트 URL과 publishable/anon 키를 루트의 `.env.local`에 입력합니다. `.env.example`을 복사해 시작할 수 있습니다.
+3. Gemini API 키는 `supabase/functions/.env`에 `GEMINI_API_KEY=발급받은키` 형태로 입력합니다. 이 파일은 Git에 포함되지 않습니다.
+4. Supabase CLI로 프로젝트에 연결하고 Edge Function을 실행합니다.
+
+```bash
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase secrets set --env-file supabase/functions/.env
+npx supabase functions deploy greenstep-chat
+```
+
+로컬 함수로 시험하려면 Supabase CLI에 Docker가 실행 중이어야 합니다.
+
+```bash
+npx supabase start
+npx supabase functions serve greenstep-chat --env-file supabase/functions/.env
+```
+
+로컬 Vite 앱은 `.env.local`의 `VITE_SUPABASE_URL` 및 `VITE_SUPABASE_PUBLISHABLE_KEY`를 사용해 연결합니다. 환경 파일을 만든 뒤 Vite 서버를 다시 시작하세요. 모델명은 `GEMINI_MODEL`로 변경할 수 있습니다.
+
+> 현재 앱의 회원가입/로그인은 실제 Supabase Auth가 아니라 브라우저 `localStorage` 목업입니다. 따라서 이 데모 함수는 JWT 검증을 끈 상태로 설정되어 있습니다. 실제 배포 전에는 Supabase Auth를 연결하고 사용자 JWT 검증과 호출 제한을 적용해야 합니다. Gemini API 키는 절대 `VITE_` 환경 변수에 넣거나 GitHub에 올리지 마세요.
+
+---
+
 ## 📄 라이선스
 
 This project is licensed under the MIT License.

@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CircleHelp, RotateCcw, Send, Type, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { getChallengeRewardPoints } from '../../lib/challengeRewards';
-import { calculateTreeInfo } from '../../utils/carbonCalculator';
 
 type ChatMessage = { id: number; role: 'assistant' | 'user'; text: string };
+type GeminiHistoryItem = { role: 'user' | 'model'; text: string };
 
 const welcomeMessage: ChatMessage = {
   id: 1,
@@ -12,67 +12,109 @@ const welcomeMessage: ChatMessage = {
   text: '안녕! 진주시 마스코트 하모야 🦦\n챌린지와 포인트, 나무 성장에 대해 궁금한 점을 물어봐!',
 };
 
+const functionUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '');
+const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
 export const GreenstepChatbot: React.FC = () => {
-  const { user, challenges, setActiveTab } = useApp();
+  const { user, challenges, participations, setActiveTab } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [isLargeText, setIsLargeText] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [draft, setDraft] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [isOpen, messages]);
+  }, [isOpen, messages, isSending]);
 
-  const answerQuestion = (question: string) => {
-    const text = question.toLowerCase();
-    if (text.includes('챌린지') || text.includes('추천') || text.includes('실천')) {
-      const options = challenges
-        .filter((challenge) => challenge.active && challenge.officialIncentiveId)
-        .sort((a, b) => getChallengeRewardPoints(b) - getChallengeRewardPoints(a))
-        .slice(0, 3)
-        .map((challenge) => `• ${challenge.title} (+${getChallengeRewardPoints(challenge).toLocaleString()}P)`).join('\n');
-      return options
-        ? `진주·GNU에서 참여할 수 있는 챌린지를 골라봤어!\n${options}\n\n포인트는 공식 활동 기준으로 계산한 참고값이며, 실제 지급은 참여기업의 실적 인정과 운영 기준을 따라.`
-        : '지금 참여할 수 있는 챌린지를 불러오지 못했어. 챌린지 탭에서 확인해줘!';
-    }
-    if (text.includes('포인트') || text.includes('적립') || text.includes('얼마')) {
-      const options = challenges
-        .filter((challenge) => challenge.active && challenge.officialIncentiveId)
-        .sort((a, b) => getChallengeRewardPoints(b) - getChallengeRewardPoints(a))
-        .slice(0, 3)
-        .map((challenge) => `${challenge.title}: ${getChallengeRewardPoints(challenge).toLocaleString()}P`).join('\n');
-      return `엑셀의 공식 인센티브 단가를 기준으로 환산한 포인트야.\n${options}\n\n참여기업에서 활동을 인정받아야 하며, 실제 지급액은 운영 기준에 따라 달라질 수 있어.`;
-    }
-    if (text.includes('나무') || text.includes('레벨') || text.includes('성장')) {
-      const tree = calculateTreeInfo(user.totalCarbonReduction);
-      return `지금 ${user.nickname}님의 나무는 Lv.${tree.level} ${tree.stage.name}이야 ${tree.stage.emoji}\n나무를 누르면 Lv.1~5 새싹부터 레벨별 성장 모습을 볼 수 있어!`;
-    }
-    if (text.includes('친구') || text.includes('qr') || text.includes('팔로우')) {
-      return '마이페이지의 친구 영역에서 친구 찾기, QR 초대, 친구 목록을 이용할 수 있어. 아래 버튼으로 바로 이동할게!';
-    }
-    if (text.includes('도움') || text.includes('뭐') || text.includes('기능')) {
-      return '챌린지 추천, 엑셀 기준 포인트 안내, 나의 나무 성장, 친구 추가 방법을 도와줄 수 있어. 아래 질문을 눌러보거나 직접 입력해줘!';
-    }
-    return '아직은 GreenStep 챌린지와 포인트 정보를 중심으로 답하고 있어. “챌린지 추천”, “포인트 기준”, “내 나무 레벨”처럼 물어봐줘!';
-  };
-
-  const sendMessage = (value: string) => {
+  const sendMessage = async (value: string) => {
     const question = value.trim();
-    if (!question) return;
-    const answer = answerQuestion(question);
-    setMessages((current) => [
-      ...current,
-      { id: Date.now(), role: 'user', text: question },
-      { id: Date.now() + 1, role: 'assistant', text: answer },
-    ]);
+    if (!question || isSending) return;
+
+    const userMessage: ChatMessage = { id: Date.now(), role: 'user', text: question };
+    const conversation = [...messages, userMessage];
+    setMessages(conversation);
     setDraft('');
-    if (question.includes('친구') || question.toLowerCase().includes('qr') || question.includes('팔로우')) {
-      window.setTimeout(() => setActiveTab('my'), 500);
+    setIsSending(true);
+
+    try {
+      if (!functionUrl || !publishableKey) {
+        throw new Error('Supabase 연결 정보가 설정되지 않았습니다. .env.local 파일을 확인해 주세요.');
+      }
+
+      const history: GeminiHistoryItem[] = conversation
+        .filter((message) => message.id !== welcomeMessage.id)
+        .slice(0, -1)
+        .slice(-12)
+        .map((message) => ({ role: message.role === 'assistant' ? 'model' : 'user', text: message.text }));
+
+      const response = await fetch(`${functionUrl}/functions/v1/greenstep-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: publishableKey,
+          Authorization: `Bearer ${publishableKey}`,
+        },
+        body: JSON.stringify({
+          message: question,
+          history,
+          profile: {
+            nickname: user.nickname,
+            memberType: user.memberType,
+            university: user.university,
+            department: user.department,
+            points: user.points,
+            consecutiveDays: user.consecutiveDays,
+            totalCarbonReduction: user.totalCarbonReduction,
+          },
+          activities: participations
+            .filter((participation) => participation.status === 'completed')
+            .slice(0, 20)
+            .map((participation) => ({
+              title: challenges.find((challenge) => challenge.id === participation.challengeId)?.title ?? '친환경 실천',
+              completedAt: participation.completedAt,
+              pointsEarned: participation.pointsEarned,
+            })),
+          challenges: challenges
+            .filter((challenge) => challenge.active)
+            .slice(0, 30)
+            .map((challenge) => ({
+              title: challenge.title,
+              category: challenge.categoryName,
+              points: getChallengeRewardPoints(challenge),
+              description: challenge.description,
+            })),
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(typeof result.error === 'string' ? result.error : `챗봇 요청에 실패했습니다 (${response.status}).`);
+      }
+      if (typeof result.reply !== 'string' || !result.reply.trim()) {
+        throw new Error('챗봇에서 답변을 받지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+      setMessages((current) => [...current, { id: Date.now() + 1, role: 'assistant', text: result.reply }]);
+
+      if (question.includes('친구') || question.toLowerCase().includes('qr') || question.includes('팔로우')) {
+        window.setTimeout(() => setActiveTab('my'), 500);
+      }
+    } catch (error) {
+      const errorText = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      setMessages((current) => [...current, {
+        id: Date.now() + 1,
+        role: 'assistant',
+        text: `답변을 불러오지 못했어. ${errorText}`,
+      }]);
+    } finally {
+      setIsSending(false);
     }
   };
 
-  const resetConversation = () => setMessages([welcomeMessage]);
+  const resetConversation = () => {
+    if (!isSending) setMessages([welcomeMessage]);
+  };
 
   return (
     <>
@@ -94,8 +136,8 @@ export const GreenstepChatbot: React.FC = () => {
             <img src="/hamo.png" alt="" className="h-9 w-9 object-contain drop-shadow-sm" />
             <h2 id="greenstep-chat-title" className="mr-auto text-base font-extrabold">AI 하모</h2>
             <button type="button" onClick={() => setIsLargeText((value) => !value)} aria-label="글자 크기 변경" className="rounded-full p-2 hover:bg-white/15"><Type className="h-5 w-5" /></button>
-            <button type="button" onClick={() => sendMessage('도움말')} aria-label="도움말" className="rounded-full p-2 hover:bg-white/15"><CircleHelp className="h-5 w-5" /></button>
-            <button type="button" onClick={resetConversation} aria-label="대화 초기화" className="rounded-full p-2 hover:bg-white/15"><RotateCcw className="h-5 w-5" /></button>
+            <button type="button" onClick={() => void sendMessage('GreenStep 사용법을 알려줘')} aria-label="도움말" disabled={isSending} className="rounded-full p-2 hover:bg-white/15 disabled:opacity-50"><CircleHelp className="h-5 w-5" /></button>
+            <button type="button" onClick={resetConversation} aria-label="대화 초기화" disabled={isSending} className="rounded-full p-2 hover:bg-white/15 disabled:opacity-50"><RotateCcw className="h-5 w-5" /></button>
             <button type="button" onClick={() => setIsOpen(false)} aria-label="챗봇 닫기" className="rounded-full p-2 hover:bg-white/15"><X className="h-5 w-5" /></button>
           </header>
 
@@ -110,17 +152,18 @@ export const GreenstepChatbot: React.FC = () => {
                 <p className={`max-w-[84%] whitespace-pre-line rounded-[24px] rounded-br-md bg-[#4d91d0] px-4 py-3 leading-relaxed text-white shadow-sm ${isLargeText ? 'text-base' : 'text-sm'}`}>{message.text}</p>
               </div>
             ))}
+            {isSending && <div className="ml-10 flex items-center gap-2 text-xs font-semibold text-slate-600"><span className="h-2 w-2 animate-pulse rounded-full bg-[#4d91d0]" />하모가 답변을 생각하고 있어요…</div>}
             {messages.length === 1 && <div className="ml-10 flex flex-wrap gap-2">
-              {['챌린지 추천해줘', '포인트 기준 알려줘', '내 나무 레벨은?'].map((prompt) => <button key={prompt} type="button" onClick={() => sendMessage(prompt)} className="rounded-full border border-white/70 bg-white/80 px-3 py-2 text-[11px] font-bold text-slate-700 shadow-sm hover:bg-white">{prompt}</button>)}
+              {['챌린지 추천해줘', '포인트 기준 알려줘', '내 활동 분석해줘'].map((prompt) => <button key={prompt} type="button" disabled={isSending} onClick={() => void sendMessage(prompt)} className="rounded-full border border-white/70 bg-white/80 px-3 py-2 text-[11px] font-bold text-slate-700 shadow-sm hover:bg-white disabled:opacity-50">{prompt}</button>)}
             </div>}
           </div>
 
-          <form onSubmit={(event) => { event.preventDefault(); sendMessage(draft); }} className="shrink-0 bg-white px-3 pb-3 pt-2" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+          <form onSubmit={(event) => { event.preventDefault(); void sendMessage(draft); }} className="shrink-0 bg-white px-3 pb-3 pt-2" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-inner focus-within:border-blue-400">
-              <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="메시지 보내기" aria-label="메시지 보내기" className={`min-w-0 flex-1 bg-transparent text-slate-800 outline-none placeholder:text-slate-400 ${isLargeText ? 'text-base' : 'text-sm'}`} />
-              <button type="submit" disabled={!draft.trim()} aria-label="메시지 전송" className="rounded-full bg-[#4d91d0] p-2 text-white transition-opacity disabled:opacity-40"><Send className="h-4 w-4" /></button>
+              <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="메시지 보내기" aria-label="메시지 보내기" disabled={isSending} className={`min-w-0 flex-1 bg-transparent text-slate-800 outline-none placeholder:text-slate-400 ${isLargeText ? 'text-base' : 'text-sm'}`} />
+              <button type="submit" disabled={!draft.trim() || isSending} aria-label="메시지 전송" className="rounded-full bg-[#4d91d0] p-2 text-white transition-opacity disabled:opacity-40"><Send className="h-4 w-4" /></button>
             </div>
-            <p className="mt-2 text-center text-[10px] text-slate-500">GreenStep 안내 챗봇 · 자동 응답 미리보기</p>
+            <p className="mt-2 text-center text-[10px] text-slate-500">Gemini AI · GreenStep 맞춤 안내</p>
           </form>
         </section>
       )}
