@@ -124,6 +124,17 @@ npx supabase functions serve greenstep-chat --env-file supabase/functions/.env
 
 > 현재 앱의 회원가입/로그인은 실제 Supabase Auth가 아니라 브라우저 `localStorage` 목업입니다. 따라서 이 데모 함수는 JWT 검증을 끈 상태로 설정되어 있습니다. 실제 배포 전에는 Supabase Auth를 연결하고 사용자 JWT 검증과 호출 제한을 적용해야 합니다. Gemini API 키는 절대 `VITE_` 환경 변수에 넣거나 GitHub에 올리지 마세요.
 
+### GitHub Pages 배포
+
+저장소의 **Settings → Secrets and variables → Actions → Variables**에 다음 저장소 변수를 추가하세요.
+
+- `VITE_SUPABASE_URL`: Supabase 프로젝트 URL
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: Supabase의 publishable key
+
+`main`에 푸시하면 `.github/workflows/deploy-pages.yml`이 앱을 빌드하고 GitHub Pages에 배포합니다. 첫 배포 전에 저장소의 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 설정해야 합니다. 배포 주소는 `https://kms-2002.github.io/Greenstep/`입니다.
+
+Gemini 키는 GitHub 변수나 저장소 파일에 넣지 않습니다. 이미 배포된 Supabase Edge Function의 `GEMINI_API_KEY` 서버 secret이 Gemini 요청을 처리합니다.
+
 ---
 
 ## 📄 라이선스
