@@ -49,7 +49,7 @@ export const CUTE_AVATARS: AvatarOption[] = [
     icon: '🦦',
     bgColor: 'bg-[#EBF7F4] border-teal-200',
     textColor: 'text-teal-700',
-    image: '/hamo.png',
+    image: `${import.meta.env.BASE_URL}hamo.png`,
   },
   {
     id: 'avatar-sprout',

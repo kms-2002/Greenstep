@@ -88,7 +88,7 @@ export const LandingScreen: React.FC = () => {
           {/* Center Mascot Image (Full uncropped transparent PNG) */}
           <div className="relative z-10 w-52 h-52 flex items-center justify-center">
             <img
-              src="/hamo.png"
+              src={`${import.meta.env.BASE_URL}hamo.png`}
               alt="GreenStep 마스코트 하모"
               className="w-full h-full object-contain drop-shadow-xl hover:scale-105 transition-transform duration-300"
             />

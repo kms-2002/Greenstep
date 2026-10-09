@@ -126,14 +126,14 @@ export const GreenstepChatbot: React.FC = () => {
           className="absolute bottom-[70px] right-3 z-40 flex flex-col items-center drop-shadow-[0_4px_12px_rgba(15,23,42,0.22)] transition-transform hover:scale-105 active:scale-95"
         >
           <span className="mb-[-5px] rounded-md bg-[#559ca8] px-2 py-1 text-[10px] font-black leading-none tracking-wide text-white">Ask AI GNU!</span>
-          <img src="/hamo.png" alt="하모 챗봇" className="h-[62px] w-[62px] object-contain drop-shadow-md" />
+          <img src={`${import.meta.env.BASE_URL}hamo.png`} alt="하모 챗봇" className="h-[62px] w-[62px] object-contain drop-shadow-md" />
         </button>
       )}
 
       {isOpen && (
         <section role="dialog" aria-modal="false" aria-labelledby="greenstep-chat-title" className="absolute bottom-[72px] right-3 z-40 flex h-[58%] min-h-[350px] max-h-[490px] w-[calc(100%-24px)] max-w-[340px] flex-col overflow-hidden rounded-[28px] bg-[#aab6c7] shadow-2xl ring-1 ring-slate-900/10 animate-scaleUp">
           <header className="flex h-14 shrink-0 items-center gap-1 bg-[#4d91d0] px-3 text-white shadow-sm">
-            <img src="/hamo.png" alt="" className="h-9 w-9 object-contain drop-shadow-sm" />
+            <img src={`${import.meta.env.BASE_URL}hamo.png`} alt="" className="h-9 w-9 object-contain drop-shadow-sm" />
             <h2 id="greenstep-chat-title" className="mr-auto text-base font-extrabold">AI 하모</h2>
             <button type="button" onClick={() => setIsLargeText((value) => !value)} aria-label="글자 크기 변경" className="rounded-full p-2 hover:bg-white/15"><Type className="h-5 w-5" /></button>
             <button type="button" onClick={() => void sendMessage('GreenStep 사용법을 알려줘')} aria-label="도움말" disabled={isSending} className="rounded-full p-2 hover:bg-white/15 disabled:opacity-50"><CircleHelp className="h-5 w-5" /></button>
@@ -144,7 +144,7 @@ export const GreenstepChatbot: React.FC = () => {
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
             {messages.map((message) => message.role === 'assistant' ? (
               <div key={message.id} className="flex items-end gap-2">
-                <img src="/hamo.png" alt="하모" className="h-8 w-8 shrink-0 object-contain drop-shadow-sm" />
+                <img src={`${import.meta.env.BASE_URL}hamo.png`} alt="하모" className="h-8 w-8 shrink-0 object-contain drop-shadow-sm" />
                 <p className={`max-w-[84%] whitespace-pre-line rounded-[24px] rounded-bl-md bg-white px-4 py-3 leading-relaxed text-slate-800 shadow-sm ${isLargeText ? 'text-base' : 'text-sm'}`}>{message.text}</p>
               </div>
             ) : (
