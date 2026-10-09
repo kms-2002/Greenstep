@@ -120,7 +120,7 @@ npx supabase start
 npx supabase functions serve greenstep-chat --env-file supabase/functions/.env
 ```
 
-로컬 Vite 앱은 `.env.local`의 `VITE_SUPABASE_URL` 및 `VITE_SUPABASE_PUBLISHABLE_KEY`를 사용해 연결합니다. 환경 파일을 만든 뒤 Vite 서버를 다시 시작하세요. 모델명은 `GEMINI_MODEL`로 변경할 수 있습니다.
+로컬 Vite 앱은 `.env.local`의 `VITE_SUPABASE_URL` 및 `VITE_SUPABASE_PUBLISHABLE_KEY`를 사용해 연결합니다. 환경 파일을 만든 뒤 Vite 서버를 다시 시작하세요. GitHub Pages와 Vercel 빌드에는 공개 프로젝트 URL/publishable key 기본값이 포함되어 있으므로, 별도 환경 변수를 설정하지 않아도 같은 Supabase 함수를 사용합니다. 모델명은 Supabase 함수의 `GEMINI_MODEL`로 변경할 수 있습니다.
 
 > 현재 앱의 회원가입/로그인은 실제 Supabase Auth가 아니라 브라우저 `localStorage` 목업입니다. 따라서 이 데모 함수는 JWT 검증을 끈 상태로 설정되어 있습니다. 실제 배포 전에는 Supabase Auth를 연결하고 사용자 JWT 검증과 호출 제한을 적용해야 합니다. Gemini API 키는 절대 `VITE_` 환경 변수에 넣거나 GitHub에 올리지 마세요.
 

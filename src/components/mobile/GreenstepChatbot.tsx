@@ -12,8 +12,10 @@ const welcomeMessage: ChatMessage = {
   text: '안녕! 진주시 마스코트 하모야 🦦\n챌린지와 포인트, 나무 성장에 대해 궁금한 점을 물어봐!',
 };
 
-const functionUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '');
-const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// The project URL and publishable key are public client configuration. These defaults keep
+// GitHub Pages and Vercel builds connected even when their build environment has no .env file.
+const functionUrl = (import.meta.env.VITE_SUPABASE_URL || 'https://dfgdtvgpnsyjhnsttibs.supabase.co').replace(/\/$/, '');
+const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_8ackbhnMEYvM7He_JNJOsA_jqPjJGln';
 
 export const GreenstepChatbot: React.FC = () => {
   const { user, challenges, participations, setActiveTab } = useApp();
