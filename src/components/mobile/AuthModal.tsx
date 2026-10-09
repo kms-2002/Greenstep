@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { supabaseAuth } from '../../lib/supabase';
 import { CUTE_AVATARS } from '../../types';
+import { JINJU_UNIVERSITY_CATALOG, JINJU_UNIVERSITY_NAMES } from '../../data/jinjuUniversityCatalog';
 import { Leaf, GraduationCap, UserCheck, Sparkles, X, Building, Lock, KeyRound, CheckCircle2, AlertCircle, RotateCcw, Smile } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
@@ -16,8 +17,11 @@ export const AuthModal: React.FC = () => {
   const [nickname, setNickname] = useState('');
   const [memberType, setMemberType] = useState<'student' | 'citizen'>('student');
   const [university, setUniversity] = useState('경상국립대학교');
+  const [customUniversity, setCustomUniversity] = useState('');
   const [college, setCollege] = useState('경영대학');
+  const [customCollege, setCustomCollege] = useState('');
   const [department, setDepartment] = useState('경영정보학과');
+  const [customDepartment, setCustomDepartment] = useState('');
   const [grade, setGrade] = useState('3학년');
   const [selectedAvatarId, setSelectedAvatarId] = useState('avatar-hamo');
 
@@ -34,13 +38,12 @@ export const AuthModal: React.FC = () => {
     }
   }, [isAuthModalOpen, authInitialTab]);
 
-  const jinjuUniversities = [
-    '경상국립대학교',
-    '진주교육대학교',
-    '연암공과대학교',
-    '진주보건대학교',
-    '한국폴리텍대학 진주캠퍼스',
-  ];
+  const DIRECT_INPUT = '__direct_input__';
+  const universityName = university === DIRECT_INPUT ? customUniversity.trim() : university;
+  const collegeOptions = Object.keys(JINJU_UNIVERSITY_CATALOG[universityName] || {});
+  const collegeName = college === DIRECT_INPUT ? customCollege.trim() : college;
+  const departmentOptions = JINJU_UNIVERSITY_CATALOG[universityName]?.[college] || [];
+  const departmentName = department === DIRECT_INPUT ? customDepartment.trim() : department;
 
   if (!isAuthModalOpen) return null;
 
@@ -73,6 +76,14 @@ export const AuthModal: React.FC = () => {
         setErrorMessage('닉네임을 입력해 주세요.');
         return;
       }
+      if (memberType === 'student' && !universityName) {
+        setErrorMessage('대학교를 선택하거나 직접 입력해 주세요.');
+        return;
+      }
+      if (memberType === 'student' && (!collegeName || !departmentName)) {
+        setErrorMessage('단과대학과 학과를 선택하거나 직접 입력해 주세요.');
+        return;
+      }
 
       // Supabase Auth DB 저장
       const res = supabaseAuth.signUp({
@@ -80,9 +91,9 @@ export const AuthModal: React.FC = () => {
         password,
         memberType,
         nickname: nickname.trim(),
-        university: memberType === 'citizen' ? '진주시민' : university.trim(),
-        college: memberType === 'citizen' ? '' : college.trim(),
-        department: memberType === 'citizen' ? '' : department.trim(),
+        university: memberType === 'citizen' ? '진주시민' : universityName,
+        college: memberType === 'citizen' ? '' : collegeName,
+        department: memberType === 'citizen' ? '' : departmentName,
         grade: memberType === 'citizen' ? '시민' : grade,
         profileAvatarId: selectedAvatarId,
       });
@@ -94,7 +105,7 @@ export const AuthModal: React.FC = () => {
 
       setSuccessMessage('Supabase DB에 회원가입 정보가 기록되었습니다!');
       setTimeout(() => {
-        login(nickname.trim(), memberType === 'citizen' ? '진주시민' : university.trim(), memberType === 'citizen' ? '' : department.trim(), memberType === 'citizen' ? '시민' : grade, studentId.trim(), selectedAvatarId, college.trim(), memberType);
+        login(nickname.trim(), memberType === 'citizen' ? '진주시민' : universityName, memberType === 'citizen' ? '' : departmentName, memberType === 'citizen' ? '시민' : grade, studentId.trim(), selectedAvatarId, memberType === 'citizen' ? '' : collegeName, memberType);
       }, 700);
 
     } else {
@@ -351,25 +362,43 @@ export const AuthModal: React.FC = () => {
                     <Building className="w-3.5 h-3.5 text-emerald-600" />
                     대학교
                   </label>
-                  <input
+                  <select
                     required
                     value={university}
-                    onChange={(e) => setUniversity(e.target.value)}
-                    placeholder="예: 경상국립대학교"
-                    list="jinju-universities"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
-                  />
-                  <datalist id="jinju-universities">{jinjuUniversities.map((school) => <option key={school} value={school} />)}</datalist>
+                    onChange={(event) => {
+                      const nextUniversity = event.target.value;
+                      const nextCollege = Object.keys(JINJU_UNIVERSITY_CATALOG[nextUniversity] || {})[0] || DIRECT_INPUT;
+                      setUniversity(nextUniversity);
+                      setCollege(nextCollege);
+                      setDepartment(JINJU_UNIVERSITY_CATALOG[nextUniversity]?.[nextCollege]?.[0] || DIRECT_INPUT);
+                      setCustomUniversity('');
+                      setCustomCollege('');
+                      setCustomDepartment('');
+                    }}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium outline-none transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
+                  >
+                    {JINJU_UNIVERSITY_NAMES.map((school) => <option key={school} value={school}>{school}</option>)}
+                    <option value={DIRECT_INPUT}>목록에 없어요 · 직접 입력</option>
+                  </select>
+                  {university === DIRECT_INPUT && <input required value={customUniversity} onChange={(event) => setCustomUniversity(event.target.value)} placeholder="대학교 이름 입력" className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500" />}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">단과대학</label>
-                    <input required value={college} onChange={(e) => setCollege(e.target.value)} placeholder="예: 경영대학" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" />
+                    <select required value={college} onChange={(event) => { const nextCollege = event.target.value; setCollege(nextCollege); setDepartment(JINJU_UNIVERSITY_CATALOG[universityName]?.[nextCollege]?.[0] || DIRECT_INPUT); setCustomDepartment(''); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2.5 text-xs font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                      {collegeOptions.map((name) => <option key={name} value={name}>{name}</option>)}
+                      <option value={DIRECT_INPUT}>직접 입력</option>
+                    </select>
+                    {college === DIRECT_INPUT && <input required value={customCollege} onChange={(event) => setCustomCollege(event.target.value)} placeholder="단과대학 입력" className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2.5 text-xs font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500" />}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">학과·학부</label>
-                    <input required value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="예: 경영정보학과" className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" />
+                    <select required value={department} onChange={(event) => setDepartment(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2.5 text-xs font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                      {departmentOptions.map((name) => <option key={name} value={name}>{name}</option>)}
+                      <option value={DIRECT_INPUT}>직접 입력</option>
+                    </select>
+                    {department === DIRECT_INPUT && <input required value={customDepartment} onChange={(event) => setCustomDepartment(event.target.value)} placeholder="학과·학부 입력" className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2.5 text-xs font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500" />}
                   </div>
                 </div>
               </>}
@@ -390,7 +419,7 @@ export const AuthModal: React.FC = () => {
                     <option value="대학원생">대학원생</option>
                   </select>
                 </div>
-                <div className="flex items-end text-[10px] leading-relaxed text-slate-400">학교명은 검색 목록에서 고르거나 직접 입력할 수 있어요.</div>
+                <div className="flex items-end text-[10px] leading-relaxed text-slate-400">학교·단과대학·학과 목록에 없으면 직접 입력할 수 있어요.</div>
               </div>}
               {memberType === 'citizen' && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-[10px] leading-relaxed text-emerald-800">진주시민 랭킹에 참여하는 데모 계정입니다. 현재 화면에서는 별도의 거주 인증을 진행하지 않습니다.</p>}
             </>

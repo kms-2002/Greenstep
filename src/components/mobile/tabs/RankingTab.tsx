@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { Avatar } from '../../common/Avatar';
 import { Award, Building2, Flame, Trophy, Users } from 'lucide-react';
+import { JINJU_UNIVERSITY_NAMES } from '../../../data/jinjuUniversityCatalog';
 
 type RankCategory = 'overall' | 'students' | 'citizens' | 'friends';
 type RankingMember = {
@@ -16,14 +17,6 @@ type RankingMember = {
   avatarId?: string;
   isCurrentUser?: boolean;
 };
-
-const JINJU_UNIVERSITIES = [
-  '경상국립대학교',
-  '진주교육대학교',
-  '연암공과대학교',
-  '진주보건대학교',
-  '한국폴리텍대학 진주캠퍼스',
-];
 
 const SAMPLE_CITIZENS: RankingMember[] = [
   { id: 'citizen-1', nickname: '남강산책러', university: '진주시민', department: '시민', carbonReduction: 39.6, points: 1080, streak: 12, avatarId: 'avatar-tree' },
@@ -42,7 +35,7 @@ const sortByCarbon = (members: RankingMember[]) => [...members].sort((a, b) => b
 export const RankingTab: React.FC = () => {
   const { user, personalRanks } = useApp();
   const [activeRankTab, setActiveRankTab] = useState<RankCategory>('overall');
-  const [selectedUniversity, setSelectedUniversity] = useState(user.memberType === 'citizen' ? JINJU_UNIVERSITIES[0] : user.university || JINJU_UNIVERSITIES[0]);
+  const [selectedUniversity, setSelectedUniversity] = useState(user.memberType === 'citizen' ? JINJU_UNIVERSITY_NAMES[0] : user.university || JINJU_UNIVERSITY_NAMES[0]);
 
   const currentUser: RankingMember = {
     id: user.id,
@@ -102,7 +95,7 @@ export const RankingTab: React.FC = () => {
         {tabs.map((tab) => <button key={tab.id} onClick={() => setActiveRankTab(tab.id)} className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold transition-all ${activeRankTab === tab.id ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}>{tab.icon}<span>{tab.label}</span></button>)}
       </div>
 
-      {isSchoolFilter && <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-600 shadow-sm"><Building2 className="h-4 w-4 shrink-0 text-emerald-600" /><span className="shrink-0">학교 선택</span><select value={selectedUniversity} onChange={(event) => setSelectedUniversity(event.target.value)} className="min-w-0 flex-1 bg-transparent text-right text-xs font-extrabold text-slate-800 outline-none">{Array.from(new Set([...JINJU_UNIVERSITIES, user.university])).filter(Boolean).map((school) => <option key={school} value={school}>{school}</option>)}</select></label>}
+      {isSchoolFilter && <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-600 shadow-sm"><Building2 className="h-4 w-4 shrink-0 text-emerald-600" /><span className="shrink-0">학교 선택</span><select value={selectedUniversity} onChange={(event) => setSelectedUniversity(event.target.value)} className="min-w-0 flex-1 bg-transparent text-right text-xs font-extrabold text-slate-800 outline-none">{Array.from(new Set([...JINJU_UNIVERSITY_NAMES, user.university])).filter(Boolean).map((school) => <option key={school} value={school}>{school}</option>)}</select></label>}
 
       <div className="flex items-center justify-between rounded-2xl border border-emerald-700/60 bg-gradient-to-r from-emerald-900 to-teal-900 p-4 text-white shadow-md">
         <div className="flex min-w-0 items-center gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 text-sm font-black text-slate-950">{myRank ? `${myRank.rank}위` : '—'}</div><div className="min-w-0"><span className="block text-[11px] font-bold text-emerald-200">{myRank ? '나의 현재 순위' : isSchoolFilter ? '선택한 학교 순위' : '내 순위'}</span><span className="block truncate text-sm font-extrabold">{myRank ? user.nickname : isSchoolFilter ? `${selectedUniversity} 랭킹` : '해당 유형에 등록된 계정이 아니에요'}</span></div></div>

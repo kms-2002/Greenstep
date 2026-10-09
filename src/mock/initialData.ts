@@ -252,7 +252,6 @@ export const INITIAL_PERSONAL_RANKS: PersonalRank[] = [
   { rank: 8, userId: 'u-108', nickname: '새싹교대생', university: '진주교육대학교', department: '초등교육과', carbonReduction: 22.9, points: 660, avatarUrl: 'avatar-sprout' },
   { rank: 9, userId: 'u-109', nickname: '연암그린', university: '연암공과대학교', department: '스마트전기전자공학과', carbonReduction: 19.7, points: 590, avatarUrl: 'avatar-rider' },
   { rank: 10, userId: 'u-110', nickname: '건강한진주', university: '진주보건대학교', department: '간호학부', carbonReduction: 17.6, points: 520, avatarUrl: 'avatar-tree' },
-  { rank: 11, userId: 'u-111', nickname: '폴리텍초록', university: '한국폴리텍대학 진주캠퍼스', department: '자동화시스템과', carbonReduction: 15.2, points: 460, avatarUrl: 'avatar-tumbler' },
 ];
 
 // GNU Business College 5 Departments Ranks
