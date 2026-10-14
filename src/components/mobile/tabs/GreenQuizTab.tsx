@@ -114,7 +114,12 @@ const UserGreenQuiz: React.FC = () => {
     setError('');
     requestQuiz(quizKey, context).then(question => {
       if (active) setQuizState({ key: quizKey, quiz: question });
-    }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : '문제 생성에 실패했어요.'); });
+    }).catch(reason => {
+      if (!active) return;
+      setError(reason instanceof TypeError ? '퀴즈 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.'
+        : reason instanceof Error && reason.name === 'TimeoutError' ? 'AI 문제 생성 시간이 길어지고 있어요. 잠시 후 다시 시도해 주세요.'
+        : reason instanceof Error ? reason.message : '문제 생성에 실패했어요.');
+    });
     return () => { active = false; };
   }, [quizKey, todayAnswer, context, retry]);
 

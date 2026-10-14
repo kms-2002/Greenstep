@@ -53,7 +53,8 @@ Deno.serve(async (request) => {
         { role: 'user', parts: [{ text: message }] },
       ],
       generationConfig: isQuiz
-        ? { temperature: 0.7, maxOutputTokens: 2048, responseMimeType: 'application/json', responseSchema: quizSchema }
+        ? { temperature: 0.7, maxOutputTokens: 2048, responseMimeType: 'application/json', responseSchema: quizSchema,
+            ...(/^gemini-[34]/.test(model) ? { thinkingConfig: { thinkingLevel: 'LOW' } } : {}) }
         : { temperature: 0.6, maxOutputTokens: 700 },
     });
 
