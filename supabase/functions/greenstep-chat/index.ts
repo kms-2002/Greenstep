@@ -1,3 +1,5 @@
+import { quizInstruction, quizSchema, parseQuiz } from './quiz.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -20,7 +22,8 @@ Deno.serve(async (request) => {
 
   try {
     const body = await request.json();
-    const message = typeof body.message === 'string' ? body.message.trim().slice(0, 1000) : '';
+    const isQuiz = body.mode === 'quiz';
+    const message = isQuiz ? '최근 실천과 관련된 새로운 환경 문제를 만들어 주세요.' : typeof body.message === 'string' ? body.message.trim().slice(0, 1000) : '';
     if (!message) return jsonResponse({ error: '질문 내용을 입력해 주세요.' }, 400);
 
     const history: ChatMessage[] = Array.isArray(body.history)
@@ -34,6 +37,7 @@ Deno.serve(async (request) => {
       : [];
 
     const context = {
+      previousQuestions: isQuiz && Array.isArray(body.previousQuestions) ? body.previousQuestions.slice(-14).map((q: unknown) => String(q).slice(0, 300)) : [],
       profile: body.profile && typeof body.profile === 'object' ? body.profile : {},
       recentActivities: Array.isArray(body.activities) ? body.activities.slice(0, 20) : [],
       availableChallenges: Array.isArray(body.challenges) ? body.challenges.slice(0, 30) : [],
@@ -42,43 +46,50 @@ Deno.serve(async (request) => {
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
     const geminiBody = JSON.stringify({
       systemInstruction: {
-        parts: [{ text: `너는 GreenStep의 친근한 한국어 환경 실천 도우미 하모야. 사용자의 질문에 먼저 직접 답하고, 제공된 프로필·최근 실천·활성 챌린지에 맞춰 간결하고 구체적으로 안내해. 챌린지 포인트는 전달된 데이터에 있는 수치만 안내하고, 실제 포인트 지급을 확정적으로 약속하지 마. 데이터에 없는 진주시 정책이나 학교 정보를 사실처럼 만들지 말고 모른다고 말해. 활동 맥락은 다음 JSON이야: ${JSON.stringify(context).slice(0, 12000)}` }],
+        parts: [{ text: isQuiz ? `${quizInstruction} 참고 데이터: ${JSON.stringify(context).slice(0, 14000)}` : `너는 GreenStep의 친근한 한국어 환경 실천 도우미 하모야. 사용자의 질문에 먼저 직접 답하고, 제공된 프로필·최근 실천·활성 챌린지에 맞춰 간결하고 구체적으로 안내해. 챌린지 포인트는 전달된 데이터에 있는 수치만 안내하고, 실제 포인트 지급을 확정적으로 약속하지 마. 데이터에 없는 진주시 정책이나 학교 정보를 사실처럼 만들지 말고 모른다고 말해. 활동 맥락은 다음 JSON이야: ${JSON.stringify(context).slice(0, 12000)}` }],
       },
       contents: [
-        ...history.map((item) => ({ role: item.role, parts: [{ text: item.text }] })),
+        ...(isQuiz ? [] : history).map((item) => ({ role: item.role, parts: [{ text: item.text }] })),
         { role: 'user', parts: [{ text: message }] },
       ],
-      generationConfig: { temperature: 0.6, maxOutputTokens: 700 },
+      generationConfig: isQuiz
+        ? { temperature: 0.7, maxOutputTokens: 2048, responseMimeType: 'application/json', responseSchema: quizSchema }
+        : { temperature: 0.6, maxOutputTokens: 700 },
     });
 
     let geminiResponse: Response | null = null;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         geminiResponse = await fetch(geminiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
           body: geminiBody,
+          signal: AbortSignal.timeout(30000),
         });
       } catch (error) {
-        if (attempt === 2) {
+        if (attempt === 1) {
           console.error('Gemini connection failed:', error instanceof Error ? error.message : 'unknown error');
           return jsonResponse({ error: 'Gemini 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.' }, 502);
         }
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        continue;
       }
 
       if (geminiResponse?.ok) break;
-      const isRetryable = geminiResponse && [429, 500, 502, 503, 504].includes(geminiResponse.status);
-      if (!isRetryable || attempt === 2) break;
+      const isRetryable = geminiResponse && [500, 502, 503, 504].includes(geminiResponse.status);
+      if (!isRetryable || attempt === 1) break;
       await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
     }
 
     if (!geminiResponse) return jsonResponse({ error: 'Gemini 응답을 받지 못했습니다. 잠시 후 다시 시도해 주세요.' }, 502);
     if (!geminiResponse.ok) {
       console.error(`Gemini API returned HTTP ${geminiResponse.status}`);
-      const message = geminiResponse.status === 503 || geminiResponse.status === 429
-        ? 'Gemini 서비스가 혼잡합니다. 잠시 후 다시 시도해 주세요.'
+      const message = geminiResponse.status === 429
+        ? 'Gemini API 사용 한도 또는 요청 속도 제한에 도달했습니다(429). 시간을 두고 다시 시도해 주세요.'
+        : geminiResponse.status === 503
+        ? 'Gemini 서비스가 일시적으로 혼잡합니다(503). 잠시 후 다시 시도해 주세요.'
         : `Gemini API 오류(HTTP ${geminiResponse.status})가 발생했습니다. 배포 설정과 API 키 권한을 확인해 주세요.`;
-      return jsonResponse({ error: message }, 502);
+      return jsonResponse({ error: message, upstreamStatus: geminiResponse.status }, geminiResponse.status === 429 ? 429 : 502);
     }
 
     const result = await geminiResponse.json();
@@ -87,6 +98,10 @@ Deno.serve(async (request) => {
       .join('')
       .trim();
     if (!reply) return jsonResponse({ error: 'Gemini가 답변을 반환하지 않았습니다.' }, 502);
+    if (isQuiz) {
+      try { return jsonResponse({ quiz: parseQuiz(JSON.parse(reply), context.availableChallenges) }); }
+      catch { return jsonResponse({ error: '생성된 퀴즈 형식이 올바르지 않습니다. 다시 생성해 주세요.' }, 502); }
+    }
     return jsonResponse({ reply });
   } catch {
     return jsonResponse({ error: '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.' }, 400);

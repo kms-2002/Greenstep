@@ -99,6 +99,23 @@ npm run dev
 
 ## 🤖 Gemini 챗봇 연결
 
+그린퀴즈도 같은 `greenstep-chat` 함수와 서버의 `GEMINI_API_KEY`를 사용합니다.
+`mode: "quiz"` 요청에 최근 완료 활동, 활성 챌린지 포인트, 이전 문제를 전달하면
+Gemini가 4지선다 문제·정답·해설·추천 챌린지를 JSON으로 생성합니다.
+이는 모델을 재학습하는 방식이 아니라 활동 정보를 프롬프트에 반영하는 개인화입니다.
+Gemini structured output 안내: https://ai.google.dev/gemini-api/docs/structured-output
+
+- 한국 날짜 기준 하루 1문제를 생성하며 계정 식별값과 날짜별로 브라우저에 저장합니다.
+- 새로고침이나 탭 재진입 시 저장된 문제를 재사용하고, 같은 화면의 중복 요청을 합칩니다.
+- 정답 10P, 3일/7일 연속 참여 30P/100P, 주간 5개 완료 50P 보상을 유지합니다.
+- 429 사용 한도 오류는 자동 재시도하지 않습니다. 503 서버 혼잡 오류와 구분해 표시합니다.
+- 기존에 답한 문제는 보상 기록을 유지합니다. 새 문제는 다음 날부터 AI로 생성됩니다.
+- 현재 문제·정답·포인트 저장은 기존 앱과 동일한 localStorage 프로토타입입니다.
+  실제 지급 서비스에는 Supabase Auth, 서버 채점, 보상 트랜잭션과 서버 중복 지급 방지가 필요합니다.
+
+서버 코드를 변경하면 `npx supabase functions deploy greenstep-chat --project-ref dfgdtvgpnsyjhnsttibs`로 배포하고,
+프런트엔드도 재배포해야 합니다. API 키를 프런트엔드에 추가하지 않습니다.
+
 챗봇은 브라우저에서 Gemini를 직접 호출하지 않습니다. API 키는 Supabase Edge Function 서버에만 저장합니다.
 
 1. Google AI Studio에서 Gemini API 키를 만들고, Gemini API로 제한된 키를 사용합니다.

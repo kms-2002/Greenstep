@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Award, Clover, CalendarCheck, CheckCircle2, CircleHelp, Flame, RotateCcw, Sparkles, Target, Zap } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
 import { getActivityQuizCategory, generateDailyGreenQuiz } from '../../../data/greenQuizGenerator';
+import { readQuiz, requestQuiz, type DailyQuiz } from '../../../lib/greenQuizApi';
+import { getChallengeRewardPoints } from '../../../lib/challengeRewards';
 import type { ChallengeCategory } from '../../../types';
 
-type QuizAnswer = { questionId: string; selectedIndex: number; correct: boolean; rewardPoints?: number; rewardMessages?: string[] };
+type QuizAnswer = { questionId: string; selectedIndex: number; correct: boolean; rewardPoints?: number; rewardMessages?: string[]; question?: DailyQuiz };
 type QuizProgress = { answers: Record<string, QuizAnswer>; rewardedStreaks: number[]; rewardedWeeks: string[] };
 
 const STORAGE_KEY = 'greenstep_daily_quiz_v1';
@@ -38,9 +40,9 @@ const getStreak = (answers: Record<string, QuizAnswer>, startDay: string) => {
   return streak;
 };
 
-const readProgress = (): QuizProgress => {
+const readProgress = (storageKey: string): QuizProgress => {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(storageKey);
     if (!saved) return emptyProgress;
     const parsed = JSON.parse(saved) as Partial<QuizProgress>;
     return {
@@ -54,10 +56,26 @@ const readProgress = (): QuizProgress => {
 };
 
 export const GreenQuizTab: React.FC = () => {
+  const { user } = useApp();
+  return <UserGreenQuiz key={user.university + ':' + (user.studentId || user.id)} />;
+};
+const UserGreenQuiz: React.FC = () => {
   const { user, updateProfile, challenges, participations, setActiveTab } = useApp();
-  const [progress, setProgress] = useState<QuizProgress>(readProgress);
+  const storageKey = STORAGE_KEY + ':' + user.university + ':' + (user.studentId || user.id);
+  const [progress, setProgress] = useState<QuizProgress>(() => {
+    if (!localStorage.getItem(STORAGE_KEY + ':migrationOwner')) {
+      const legacy = localStorage.getItem(STORAGE_KEY);
+      if (legacy && !localStorage.getItem(storageKey)) localStorage.setItem(storageKey, legacy);
+      localStorage.setItem(STORAGE_KEY + ':migrationOwner', storageKey);
+    }
+    return readProgress(storageKey);
+  });
   const [feedback, setFeedback] = useState<{ rewards: number; messages: string[] } | null>(null);
-  const today = getKoreaDateKey();
+  const [today, setToday] = useState(getKoreaDateKey);
+  useEffect(() => {
+    const timer = setInterval(() => setToday(getKoreaDateKey()), 30000);
+    return () => clearInterval(timer);
+  }, []);
   const weekKey = getWeekKey(today);
   const todayAnswer = progress.answers[today];
 
@@ -67,20 +85,49 @@ export const GreenQuizTab: React.FC = () => {
     .map((participation) => ({ participation, challenge: challenges.find((challenge) => challenge.id === participation.challengeId) }))
     .find((item) => Boolean(item.challenge)), [challenges, participations]);
 
-  const quiz = useMemo(() => {
+  const legacyQuiz = useMemo(() => {
     const category = getActivityQuizCategory(latestActivity?.challenge?.officialIncentiveId, latestActivity?.challenge?.category as Exclude<ChallengeCategory, 'all'> | undefined);
     return generateDailyGreenQuiz(today, category, latestActivity?.challenge?.title);
   }, [today, latestActivity]);
 
+  const quizKey = storageKey + ':question:' + today;
+  const [quizState, setQuizState] = useState<{ key: string; quiz: DailyQuiz } | null>(null);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
+  const submitted = useRef(false);
+  const quiz = todayAnswer?.question || (quizState?.key === quizKey ? quizState.quiz : readQuiz(quizKey)) || (todayAnswer ? legacyQuiz : null);
+  const context = useMemo(() => ({
+    activities: participations.filter(p => p.status === 'completed')
+      .sort((a, b) => (b.completedAt || b.joinedAt).localeCompare(a.completedAt || a.joinedAt)).slice(0, 20)
+      .map(p => ({ title: challenges.find(c => c.id === p.challengeId)?.title, completedAt: p.completedAt })),
+    challenges: challenges.filter(c => c.active).slice(0, 30).map(c => ({
+      title: c.title, category: c.category, description: c.description,
+      officialIncentiveId: c.officialIncentiveId, points: getChallengeRewardPoints(c),
+    })),
+    previousQuestions: Object.entries(progress.answers).sort(([a], [b]) => a.localeCompare(b)).slice(-14)
+      .map(([, answer]) => answer.question?.prompt).filter(Boolean),
+  }), [challenges, participations, progress.answers]);
+  useEffect(() => {
+    let active = true;
+    submitted.current = false;
+    if (todayAnswer || readQuiz(quizKey)) return;
+    setError('');
+    requestQuiz(quizKey, context).then(question => {
+      if (active) setQuizState({ key: quizKey, quiz: question });
+    }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : '문제 생성에 실패했어요.'); });
+    return () => { active = false; };
+  }, [quizKey, todayAnswer, context, retry]);
+
   const currentStreak = getStreak(progress.answers, todayAnswer ? today : shiftDay(today, -1));
   const weekCount = Object.keys(progress.answers).filter((day) => getWeekKey(day) === weekKey).length;
   const recommendedChallenge = todayAnswer?.correct
-    ? quiz.recommendedIncentiveIds.map((id) => challenges.find((challenge) => challenge.active && challenge.officialIncentiveId === id)).find(Boolean)
-      || challenges.find((challenge) => challenge.active && challenge.category === quiz.category)
+    ? quiz?.recommendedIncentiveIds.map((id) => challenges.find((challenge) => challenge.active && challenge.officialIncentiveId === id)).find(Boolean)
+      || challenges.find((challenge) => challenge.active && challenge.category === quiz?.category)
     : undefined;
 
   const submitAnswer = (selectedIndex: number) => {
-    if (todayAnswer) return;
+    if (!quiz || todayAnswer || submitted.current || readProgress(storageKey).answers[today]) return;
+    submitted.current = true;
     const correct = selectedIndex === quiz.answerIndex;
     const answers = { ...progress.answers, [today]: { questionId: quiz.id, selectedIndex, correct } };
     const rewardedStreaks = [...progress.rewardedStreaks];
@@ -112,10 +159,10 @@ export const GreenQuizTab: React.FC = () => {
       messages.push('이번 주 퀴즈 5개 완료 +50P');
     }
 
-    answers[today] = { questionId: quiz.id, selectedIndex, correct, rewardPoints: pointsEarned, rewardMessages: messages };
+    answers[today] = { questionId: quiz.id, selectedIndex, correct, rewardPoints: pointsEarned, rewardMessages: messages, question: quiz };
     const nextProgress = { answers, rewardedStreaks, rewardedWeeks };
     setProgress(nextProgress);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextProgress));
+    localStorage.setItem(storageKey, JSON.stringify(nextProgress));
     if (pointsEarned > 0) updateProfile({ points: user.points + pointsEarned });
     setFeedback({ rewards: pointsEarned, messages });
   };
@@ -129,7 +176,7 @@ export const GreenQuizTab: React.FC = () => {
           <div>
             <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold"><Sparkles className="h-3 w-3" />AI 맞춤 환경 퀴즈</span>
             <h2 className="mt-3 text-xl font-black">오늘의 그린퀴즈</h2>
-            <p className="mt-1 text-xs leading-relaxed text-emerald-50">{quiz.personalizationLabel}</p>
+            <p className="mt-1 text-xs leading-relaxed text-emerald-50">{quiz?.personalizationLabel || '최근 실천을 바탕으로 Gemini가 오늘의 문제를 만들어요.'}</p>
           </div>
           <div className="rounded-2xl bg-white/15 p-3"><Clover className="h-7 w-7" /></div>
         </div>
@@ -139,7 +186,11 @@ export const GreenQuizTab: React.FC = () => {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      {!quiz && <section aria-live="polite" className="rounded-3xl bg-white p-5 text-sm text-slate-700">
+        {error || 'AI가 객관식 문제와 해설을 생성하고 있어요…'}
+        {error && <button onClick={() => setRetry(v => v + 1)} className="mt-3 block rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">다시 생성하기</button>}
+      </section>}
+      {quiz && <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700">{quiz.category === 'general' ? '환경 상식' : `${latestActivity?.challenge?.categoryName || '맞춤'} 실천 맞춤`}</span>
           <span className="text-[10px] font-semibold text-slate-400">{today.replaceAll('-', '.')}</span>
@@ -161,7 +212,7 @@ export const GreenQuizTab: React.FC = () => {
           <p className="mt-1.5 text-xs leading-relaxed">{quiz.explanation}</p>
           <div className="mt-3 border-t border-current/10 pt-2 text-xs font-extrabold">{(feedback?.messages ?? todayAnswer.rewardMessages ?? []).length ? (feedback?.messages ?? todayAnswer.rewardMessages ?? []).join(' · ') : previousAnswerCorrect ? '오늘의 보상은 이미 적립되었어요.' : '퀴즈 참여 기록이 저장됐어요. 내일 다시 도전해봐요!'}</div>
         </div>}
-      </section>
+      </section>}
 
       {todayAnswer?.correct && recommendedChallenge && <section className="rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-lg">{recommendedChallenge.categoryIcon}</span><div><p className="text-[10px] font-bold text-emerald-700">오늘의 챌린지 추천</p><p className="text-sm font-extrabold text-slate-800">{recommendedChallenge.title}</p></div></div>
