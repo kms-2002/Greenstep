@@ -58,16 +58,17 @@ Deno.serve(async (request) => {
     });
 
     let geminiResponse: Response | null = null;
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    const maxAttempts = isQuiz ? 1 : 2;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       try {
         geminiResponse = await fetch(geminiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
           body: geminiBody,
-          signal: AbortSignal.timeout(30000),
+          signal: AbortSignal.timeout(isQuiz ? 60000 : 30000),
         });
       } catch (error) {
-        if (attempt === 1) {
+        if (attempt === maxAttempts - 1) {
           console.error('Gemini connection failed:', error instanceof Error ? error.message : 'unknown error');
           return jsonResponse({ error: 'Gemini 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.' }, 502);
         }
@@ -77,7 +78,7 @@ Deno.serve(async (request) => {
 
       if (geminiResponse?.ok) break;
       const isRetryable = geminiResponse && [500, 502, 503, 504].includes(geminiResponse.status);
-      if (!isRetryable || attempt === 1) break;
+      if (!isRetryable || attempt === maxAttempts - 1) break;
       await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
     }
 
