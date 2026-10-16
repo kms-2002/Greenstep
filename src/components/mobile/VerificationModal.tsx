@@ -1,213 +1,90 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { estimateCarbon, supportsWasteMeasurement } from '../../lib/carbonEstimate';
+import { verificationRequest } from '../../lib/challengeVerification';
 import { useApp } from '../../context/AppContext';
-import { Camera, Image as ImageIcon, CheckCircle, Scan, Sparkles, X, AlertCircle } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 
 export const VerificationModal: React.FC = () => {
   const { isVerificationOpen, setIsVerificationOpen, challengeToVerify, completeCertification } = useApp();
-
+  const video = useRef<HTMLVideoElement>(null);
+  const stream = useRef<MediaStream | null>(null);
+  const generation = useRef(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanComplete, setScanComplete] = useState(false);
-  const [baseline, setBaseline] = useState('');
-  const [actual, setActual] = useState('');
+  const [ticket, setTicket] = useState('');
+  const [expiresAt, setExpiresAt] = useState('');
+  const [ready, setReady] = useState(false);
+  const [opening, setOpening] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [baseline, setBaseline] = useState('');
+  const [actual, setActual] = useState('');
+  const stop = () => { stream.current?.getTracks().forEach(t => t.stop()); stream.current=null; setReady(false); };
   useEffect(() => {
-    setBaseline(''); setActual(''); setSelectedImage(null); setScanComplete(false);
+    generation.current++; stop(); setSelectedImage(null); setTicket(''); setSaveError(''); setOpening(false);setSaving(false);setBaseline('');setActual('');
+    return () => { generation.current++; stream.current?.getTracks().forEach(t => t.stop()); stream.current=null; };
   }, [isVerificationOpen, challengeToVerify?.id]);
-
+  useEffect(() => {
+    const pause = () => { if(document.hidden){generation.current++;stop();setOpening(false);} };
+    document.addEventListener('visibilitychange',pause);
+    return () => document.removeEventListener('visibilitychange',pause);
+  }, []);
   if (!isVerificationOpen || !challengeToVerify) return null;
   const hasMeasurement = supportsWasteMeasurement(challengeToVerify);
   const measurement = hasMeasurement && (baseline !== '' || actual !== '')
-    ? { baselineGrams: Number(baseline), actualGrams: Number(actual) } : undefined;
-  let measurementError = '';
-  let preview: number | null = null;
-  if (measurement) {
-    if (baseline === '' || actual === '') measurementError = '두 무게를 모두 입력하거나 모두 비워주세요.';
-    else {
-      try { preview = estimateCarbon(challengeToVerify, measurement).estimatedKgCO2e; }
-      catch (error) { measurementError = (error as Error).message; }
-    }
+    ? { baselineGrams:Number(baseline), actualGrams:Number(actual) } : undefined;
+  let measurementError=''; let preview:number|null=null;
+  if(measurement){
+    if(baseline===''||actual==='')measurementError='두 무게를 모두 입력하거나 모두 비워주세요.';
+    else try{preview=estimateCarbon(challengeToVerify,measurement).estimatedKgCO2e;}catch(e){measurementError=(e as Error).message;}
   }
-
-  // Preset sample photo options for fast testing
-  const samplePhotos: { label: string; url: string }[] = [
-    {
-      label: '🥤 텀블러/다회용컵',
-      url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&q=80&w=600',
-    },
-    {
-      label: '🚍 대중교통/교통카드',
-      url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=600',
-    },
-    {
-      label: '🍚 잔반 제로 식판',
-      url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600',
-    },
-    {
-      label: '♻️ 페트병 분리수거',
-      url: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&q=80&w=600',
-    },
-  ];
-
-  const handleSelectSample = (url: string) => {
-    setSelectedImage(url);
-    runSimulatedAIScan();
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSelectedImage(reader.result as string);
-        runSimulatedAIScan();
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const runSimulatedAIScan = () => {
-    setIsScanning(true);
-    setScanComplete(false);
-    setTimeout(() => {
-      setIsScanning(false);
-      setScanComplete(true);
-    }, 1500);
-  };
-
-  const handleConfirm = async () => {
-    if (!selectedImage || measurementError) return;
-    if (saving) return;
-    setSaving(true); setSaveError('');
+  const openCamera = async () => {
+    const run=++generation.current;
+    stop();setSelectedImage(null);setTicket('');setSaveError('');setOpening(true);
     try {
-      await completeCertification(challengeToVerify.id, selectedImage, measurement);
-      setSelectedImage(null); setScanComplete(false);
-    } catch (error) { setSaveError(error instanceof Error ? error.message : '저장하지 못했어요. 다시 시도해주세요.'); }
-    finally { setSaving(false); }
+      if(!navigator.mediaDevices?.getUserMedia)throw new Error('HTTPS 또는 localhost에서 카메라를 사용할 수 있습니다.');
+      const media=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}},audio:false});
+      if(run!==generation.current){media.getTracks().forEach(t=>t.stop());return;}
+      stream.current=media;
+      const session=await verificationRequest({mode:'start',challengeId:challengeToVerify.id});
+      if(run!==generation.current)return;
+      setTicket(session.ticket);setExpiresAt(session.expiresAt);
+      if(video.current){video.current.srcObject=media;await video.current.play();}
+    } catch(e){if(run===generation.current){stop();setSaveError(e instanceof Error&&e.name==='NotAllowedError'?'카메라 사용 권한을 허용해주세요.':e instanceof Error?e.message:'카메라를 열지 못했습니다.');}}
+    finally{if(run===generation.current)setOpening(false);}
   };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col relative max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="p-4 bg-emerald-900 text-white flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-xl">{challengeToVerify.categoryIcon}</span>
-            <div>
-              <h3 className="font-bold text-sm tracking-tight">{challengeToVerify.title}</h3>
-              <p className="text-[11px] text-emerald-200">실천 모습을 사진으로 인증해주세요</p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              setIsVerificationOpen(false);
-              setSelectedImage(null);
-            }}
-            className="w-8 h-8 rounded-full bg-emerald-800 flex items-center justify-center text-emerald-200 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
+  const capture=()=>{
+    const v=video.current;
+    if(!v?.videoWidth||!ticket)return;
+    if(Date.now()>new Date(expiresAt).getTime()){stop();setSaveError('촬영 시간이 만료되었습니다. 카메라를 다시 열어주세요.');return;}
+    const canvas=document.createElement('canvas'); const scale=Math.min(1,1280/v.videoWidth);
+    canvas.width=Math.round(v.videoWidth*scale);canvas.height=Math.round(v.videoHeight*scale);
+    canvas.getContext('2d')!.drawImage(v,0,0,canvas.width,canvas.height);
+    setSelectedImage(canvas.toDataURL('image/jpeg',0.8));stop();
+  };
+  const submit=async()=>{
+    if(!selectedImage||saving||measurementError)return;
+    setSaving(true);setSaveError('');
+    try{await completeCertification(challengeToVerify.id,selectedImage,measurement,ticket);}
+    catch(e){setSaveError(e instanceof Error?e.message:'분석하지 못했습니다. 다시 촬영해주세요.');}
+    finally{setSaving(false);}
+  };
+  return <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
+    <div role="dialog" aria-modal="true" aria-label="실시간 활동 사진 인증" className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="p-4 bg-emerald-900 text-white flex items-center justify-between">
+        <div><h3 className="font-bold">{challengeToVerify.title}</h3><p className="text-xs text-emerald-200">지금 촬영하고 AI로 실천 인증하기</p></div>
+        <button aria-label="인증 닫기" disabled={saving} onClick={()=>setIsVerificationOpen(false)}><X/></button>
+      </div>
+      <div className="p-5 space-y-4">
+        <div className="relative aspect-video bg-slate-900 rounded-2xl overflow-hidden">
+          <video ref={video} autoPlay muted playsInline onLoadedData={()=>setReady(true)} className={selectedImage?'hidden':'w-full h-full object-contain'}/>
+          {selectedImage&&<img src={selectedImage} alt="방금 촬영한 인증 사진" className="w-full h-full object-contain"/>}
+          {!ready&&!selectedImage&&<p className="absolute inset-0 flex items-center justify-center text-sm text-white">카메라를 열어 실천 모습을 촬영해주세요</p>}
         </div>
-
-        {/* Modal Body */}
-        <div className="p-5 space-y-4">
-          {/* Main Photo Area / Scanner Visualizer */}
-          <div className="relative w-full aspect-video rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 overflow-hidden flex flex-col items-center justify-center">
-            {selectedImage ? (
-              <>
-                <img
-                  src={selectedImage}
-                  alt="인증 사진"
-                  className="w-full h-full object-cover"
-                />
-
-                {/* AI Scanning overlay animation */}
-                {isScanning && (
-                  <div className="absolute inset-0 bg-emerald-950/70 backdrop-blur-sm flex flex-col items-center justify-center text-white">
-                    <Scan className="w-10 h-10 text-emerald-400 animate-spin" />
-                    <p className="text-xs font-bold mt-2 text-emerald-200 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                      인증 사진 준비 중... (시연)
-                    </p>
-                    <div className="w-48 bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
-                      <div className="bg-emerald-400 h-full animate-pulse w-3/4" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Scan Complete Verified Badge */}
-                {scanComplete && (
-                  <div className="absolute bottom-3 left-3 right-3 bg-emerald-900/90 backdrop-blur-md border border-emerald-500/50 text-white p-2.5 rounded-xl flex items-center justify-between text-xs shadow-lg animate-fadeIn">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <div>
-                        <span className="font-bold text-emerald-200">사진 준비 완료</span>
-                        <p className="text-[10px] text-emerald-100/90">
-                          실천 내용과 입력 무게를 확인해주세요
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center p-4">
-                <Camera className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                <p className="text-xs font-bold text-slate-600">인증할 사진을 선택하세요</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  직접 촬영하거나 샘플 사진을 선택할 수 있습니다.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons: Camera / Gallery */}
-          <div className="grid grid-cols-2 gap-3">
-            <label className="flex items-center justify-center space-x-2 py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl cursor-pointer border border-emerald-200 transition-colors">
-              <Camera className="w-4 h-4" />
-              <span>사진 촬영</span>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </label>
-
-            <label className="flex items-center justify-center space-x-2 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl cursor-pointer border border-slate-200 transition-colors">
-              <ImageIcon className="w-4 h-4" />
-              <span>갤러리 선택</span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {/* Fast Sample Photos Selector */}
-          <div>
-            <span className="block text-[11px] font-bold text-slate-500 mb-1.5">
-              💡 빠른 테스트용 샘플 사진 선택:
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              {samplePhotos.map((s, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSelectSample(s.url)}
-                  className="text-left text-[11px] font-medium bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 p-2 rounded-xl border border-slate-200 flex items-center space-x-2 transition-all truncate"
-                >
-                  <img src={s.url} alt={s.label} className="w-7 h-7 rounded-lg object-cover" />
-                  <span className="truncate">{s.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
+        <p className="text-xs text-slate-500">촬영 요청은 5분 동안 유효합니다. 사진은 인증을 위해 Groq AI로 전송되며, 승인된 사진은 비공개로 저장됩니다.</p>
+        <div className="flex gap-2">
+          <button disabled={opening||saving} onClick={openCamera} className="flex-1 p-3 rounded-xl bg-emerald-50 text-emerald-800 font-bold disabled:opacity-50">{opening?'카메라 연결 중…':selectedImage?'다시 촬영':'카메라 열기'}</button>
+          {ready&&!selectedImage&&<button onClick={capture} disabled={opening||saving} className="flex-1 p-3 rounded-xl bg-emerald-700 text-white flex items-center justify-center gap-2"><Camera size={18}/>촬영</button>}
+        </div>
           {hasMeasurement && (
             <section className="rounded-xl bg-emerald-50 p-3 space-y-2 text-xs text-emerald-900">
               <h4 className="font-bold">음식물쓰레기 감축 무게 (선택)</h4>
@@ -222,33 +99,10 @@ export const VerificationModal: React.FC = () => {
               <p className="text-[10px]">감축 무게(kg) × 1.65. 제공된 창원시 자료의 추정치이며 진주시 공인 실적이 아닙니다.</p>
             </section>
           )}
-          {/* Verification Status Notice */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex items-start space-x-2 text-[11px] text-amber-800">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold">시범 인증 안내</span>
-              <p className="text-[10px] text-amber-700 mt-0.5">
-                사진 확인은 시연용입니다. 무게는 사진으로 판별하지 않으며, 측정값과 적용 가능한 계수가 있을 때만 CO₂ 추정량을 기록합니다.
-              </p>
-            </div>
-          </div>
-
-          {/* Final Submit Button */}
-          {saveError && <p role="alert" className="text-xs text-red-700">{saveError}</p>}
-          <button
-            disabled={saving || !selectedImage || isScanning || !!measurementError}
-            onClick={handleConfirm}
-            className={`w-full py-3.5 rounded-2xl font-bold text-sm shadow-lg flex items-center justify-center space-x-2 transition-all ${
-              selectedImage && !isScanning
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 shadow-emerald-600/30 cursor-pointer active:scale-95'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-            }`}
-          >
-            <CheckCircle className="w-4 h-4" />
-            <span>{saving ? '계정에 저장 중...' : '실천 인증 완료하기'}</span>
-          </button>
-        </div>
+        <p className="text-xs text-slate-500">AI가 사진 속 실천을 확인한 경우에만 포인트가 적립됩니다. 거리·구매 여부 등 사진으로 확인하기 어려운 조건은 승인되지 않을 수 있습니다. 입력한 잔반 무게는 직접 측정한 값이며 AI가 검증하지 않습니다.</p>
+        {saveError&&<p role="alert" className="text-sm text-red-700">{saveError}</p>}
+        <button disabled={!selectedImage||saving||!!measurementError} onClick={submit} className="w-full p-3 rounded-xl bg-emerald-700 text-white font-bold disabled:bg-slate-200 disabled:text-slate-500">{saving?'AI 분석 및 포인트 반영 중…':'사진 분석하고 인증하기'}</button>
       </div>
     </div>
-  );
+  </div>;
 };

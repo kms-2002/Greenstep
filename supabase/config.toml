@@ -2,3 +2,7 @@
 # Public chat remains available without a session. Quiz requests explicitly verify
 # the user's access token inside the function before accessing private quiz records.
 verify_jwt = false
+
+[functions.greenstep-ai]
+# Auth token is checked inside the handler before all operations.
+verify_jwt = false
