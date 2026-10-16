@@ -1,0 +1,50 @@
+{
+  "dataset_id": "changwon-supplied-20261016",
+  "source_filename": "경상남도_창원시_온실가스배출량_수정.csv",
+  "source_sha256": "fa3ad8a6659226f705391104e829c20fb0559aebb6764547dba58d944ad3f42a",
+  "source_encoding": "utf-8-sig",
+  "imported_on": "2026-10-16",
+  "source_jurisdiction": "경상남도 창원시",
+  "target_jurisdiction": "진주시·경상국립대학교",
+  "verification": "user_supplied_reference_not_independently_verified",
+  "row_count": 82,
+  "status_counts": {
+    "reference_only": 81,
+    "conditional_mass_estimate": 1
+  },
+  "duplicate_name_groups": {
+    "태양열 온수기 도입": [
+      5,
+      12
+    ],
+    "지열 냉난방 시스템 보급(가정)": [
+      6,
+      89
+    ],
+    "태양광 시스템 보급 확대": [
+      11,
+      87
+    ],
+    "태양열 시스템 보급 확대": [
+      13,
+      88
+    ],
+    "대기전력차단기 보급": [
+      26,
+      27
+    ]
+  },
+  "formula": "reduced_food_waste_kg * original_tCO2eq_per_kg * 1000",
+  "example": {
+    "baseline_waste_kg": 0.2,
+    "actual_waste_kg": 0.05,
+    "avoided_kg": 0.15,
+    "estimated_kg_co2e": 0.2475
+  },
+  "limitations": [
+    "기간 미상 행의 365일 나누기 금지",
+    "상이한 분모의 계수 합산 금지",
+    "창원시 제공 자료를 진주시 공식 계수로 표시하지 않음",
+    "기존 포인트 인센티브 금액과 CO2e 계수는 별도"
+  ]
+}

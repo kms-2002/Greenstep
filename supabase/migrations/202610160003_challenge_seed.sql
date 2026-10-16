@@ -1,0 +1,26 @@
+-- Generated from canonical challenge reward rules. App points are not official cash payouts.
+INSERT INTO public.gs_challenges(id,title,points,incentive_id,active) VALUES
+('ch-transport-1','진주 시내버스 & GNU 통학버스 이용',30,NULL,false),
+('ch-transport-2','진주 남강 공유자전거 5km 라이딩',500,'shared-bike',true),
+('ch-transport-3','GNU 가좌캠퍼스 도보 이동',15,NULL,false),
+('ch-life-1','GNU 캠퍼스 텀블러 지참 (할인)',300,'tumbler-reusable-cup',true),
+('ch-life-2','진주 상권 다회용 가방/에코백 사용',50,'shopping-bag',true),
+('ch-life-3','경영대학 강의실 마지막 소등',15,NULL,false),
+('ch-food-1','GNU 가좌캠 학식 잔반 제로',100,'zero-leftover-meal',true),
+('ch-food-2','진주 로컬푸드 & 채식 한 끼',40,NULL,false),
+('ch-food-3','가좌동 배달 수저 안 받기',10,NULL,false),
+('ch-resource-1','진주 남강변 줍깅 (플로깅)',35,NULL,false),
+('ch-resource-2','고품질 재활용품 1kg 배출',300,'high-quality-recycling',true),
+('ch-resource-3','진주시 폐건전지/종이팩 수거함 이용',25,NULL,false),
+('ch-official-electronic-receipt','GNU·진주 참여매장 전자영수증 발급',10,'electronic-receipt',true),
+('ch-official-single-use-cup-return','진주 참여매장 일회용컵 반환',100,'single-use-cup-return',true),
+('ch-official-refill-station','진주 리필스테이션 이용',500,'refill-station',true),
+('ch-official-reusable-container','진주 참여매장 다회용기 이용',500,'reusable-container',true),
+('ch-official-zero-emission-car','진주 무공해차량 5km 이용',500,'zero-emission-car-rental',true),
+('ch-official-eco-product','진주 참여매장 친환경제품 구매',500,'eco-friendly-product',true),
+('ch-official-used-phone','폐휴대폰 1개 반납',1000,'used-mobile-phone-return',true),
+('ch-official-tree-planting','진주·GNU 공식 나무심기 참여',3000,'tree-planting',true),
+('ch-official-balcony-solar','진주 주거지 베란다 태양광 설치',10000,'balcony-solar-installation',true),
+('ch-official-recycled-material-product','재생원료 사용제품 구매',100,'recycled-material-product',true),
+('ch-official-personal-container','GNU·진주 참여매장 개인용기 포장',500,'personal-container-takeout',true)
+ON CONFLICT(id) DO UPDATE SET title=excluded.title,points=excluded.points,incentive_id=excluded.incentive_id,active=excluded.active;

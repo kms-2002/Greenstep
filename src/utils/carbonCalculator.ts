@@ -1,80 +1,13 @@
+import { FOOD_WASTE_FACTOR } from '../lib/carbonEstimate';
 import type { CarbonFactor, Challenge, Participation } from '../types';
 
-export const INITIAL_CARBON_FACTORS: CarbonFactor[] = [
-  {
-    id: 'cf-1',
-    action: 'GNU 캠퍼스 텀블러 지참 (일회용 컵 대체)',
-    category: 'life',
-    unit: '1회',
-    factorKgCO2e: 0.1,
-    description: '가좌캠 카페/학식 텀블러 할인 및 종이/플라스틱 컵 제조/폐기 과정 절감',
-    source: '한국환경산업기술원 (KEITI) 탄소발자국 데이터',
-  },
-  {
-    id: 'cf-2',
-    action: '진주 시내버스 & GNU 통학버스 이용',
-    category: 'transport',
-    unit: '1회 (약 10km)',
-    factorKgCO2e: 1.2,
-    description: '자가용 이동 대비 진주시 시내버스/통학버스 이용 시 탄소 감축량',
-    source: '국토교통부 대중교통 탄소배출계수 산정 가이드',
-  },
-  {
-    id: 'cf-3',
-    action: '진주 남강 자전거길 라이딩',
-    category: 'transport',
-    unit: '1회 (약 5km)',
-    factorKgCO2e: 0.8,
-    description: '명품 자전거 도시 진주 남강 자전거 도로 이용 시 탄소 감축량',
-    source: '한국교통연구원 맑은공기 교통지표',
-  },
-  {
-    id: 'cf-4',
-    action: 'GNU 가좌캠퍼스 도보 이동',
-    category: 'transport',
-    unit: '1회 (약 2km)',
-    factorKgCO2e: 0.4,
-    description: '경영대학 및 가좌캠퍼스 2km 이내 도보 이동 시 절감량',
-    source: '환경부 생활 속 탄소중립 실천 가이드북',
-  },
-  {
-    id: 'cf-5',
-    action: 'GNU 가좌캠 학식 잔반 제로',
-    category: 'food',
-    unit: '1식',
-    factorKgCO2e: 0.5,
-    description: '학생식당 잔반 남기지 않기를 통한 메탄가스 발생 감축',
-    source: '환경부 음식물류 폐기물 발생 억제 지침',
-  },
-  {
-    id: 'cf-6',
-    action: '진주 로컬푸드 & 채식 한 끼',
-    category: 'food',
-    unit: '1식',
-    factorKgCO2e: 1.5,
-    description: '진주 로컬푸드 유통 탄소 절감 및 육류 대비 채식 식단 감축',
-    source: 'UN FAO 축산업 탄소발자국 보고서',
-  },
-  {
-    id: 'cf-7',
-    action: '진주 남강변 줍깅 (플로깅)',
-    category: 'resource',
-    unit: '1회 줍깅',
-    factorKgCO2e: 1.0,
-    description: '남강 산책로 쓰레기 수거 및 하천 수질 환경 보호 실천',
-    source: '진주시 환경보전 및 탄소중립 실천포인트',
-  },
-  {
-    id: 'cf-8',
-    action: '투명 페트병 라벨 떼고 분리배출',
-    category: 'resource',
-    unit: '1회 배출',
-    factorKgCO2e: 0.3,
-    description: '라벨 수거 분리배출을 통한 재활용률 향상 절감량',
-    source: '한국순환자원유통지원센터',
-  },
-];
-
+export const INITIAL_CARBON_FACTORS: CarbonFactor[] = [{
+  id: FOOD_WASTE_FACTOR.id,
+  action: '음식물쓰레기 감축 (측정 무게 기준)', category: 'food', unit: '감축량 1kg',
+  factorKgCO2e: FOOD_WASTE_FACTOR.factor_kg_co2e_per_unit,
+  description: '제공된 창원시 자료 기반 추정치. 식사 1회에 적용하지 않음. 진주시 공인 계수 아님.',
+  source: FOOD_WASTE_FACTOR.source_citation,
+}];
 // Tree level calculations
 export interface TreeStage {
   level: number;

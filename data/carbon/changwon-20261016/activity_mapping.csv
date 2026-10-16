@@ -1,0 +1,23 @@
+﻿activity_key,factor_id,status,required_inputs,reason
+zero-leftover-meal,changwon-supplied-20261016-214,conditional,baseline_waste_kg;actual_waste_kg,같은 식사 기준 음식물쓰레기 감축 질량에만 적용. 식사 1회는 질량이 아님
+shared-bike,changwon-supplied-20261016-164,review_required,distance_km;avoided_mode;source_period,명당 계수를 5km 또는 1회로 환산할 근거 없음
+ch-transport-1,changwon-supplied-20261016-179,review_required,distance_km;occupancy;avoided_mode;source_period,기관 차량 대체 사업 계수이며 개인 통학버스 이용 계수가 아님
+ch-life-3,changwon-supplied-20261016-54,review_required,area_m2;duration_hours;source_period,소등 면적·기간·조명 조건 확인 필요
+balcony-solar-installation,changwon-supplied-20261016-35,review_required,installed_kw;operating_period;source_period,설치 용량과 가동 기간 확인 필요
+tumbler-reusable-cup,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+shopping-bag,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+electronic-receipt,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+reusable-container,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+personal-container-takeout,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+refill-station,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+eco-friendly-product,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+recycled-material-product,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+zero-emission-car-rental,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+high-quality-recycling,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+used-mobile-phone-return,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+tree-planting,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+ch-transport-3,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+ch-food-2,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+ch-food-3,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+ch-resource-1,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음
+ch-resource-3,,no_matching_factor,,동일 활동·단위의 계수가 제공 CSV에 없음. 유사 명칭만으로 연결하지 않음

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { estimateCarbon, supportsWasteMeasurement } from '../../lib/carbonEstimate';
 import { useApp } from '../../context/AppContext';
 import { Camera, Image as ImageIcon, CheckCircle, Scan, Sparkles, X, AlertCircle } from 'lucide-react';
 
@@ -8,8 +9,27 @@ export const VerificationModal: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
+  const [baseline, setBaseline] = useState('');
+  const [actual, setActual] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  useEffect(() => {
+    setBaseline(''); setActual(''); setSelectedImage(null); setScanComplete(false);
+  }, [isVerificationOpen, challengeToVerify?.id]);
 
   if (!isVerificationOpen || !challengeToVerify) return null;
+  const hasMeasurement = supportsWasteMeasurement(challengeToVerify);
+  const measurement = hasMeasurement && (baseline !== '' || actual !== '')
+    ? { baselineGrams: Number(baseline), actualGrams: Number(actual) } : undefined;
+  let measurementError = '';
+  let preview: number | null = null;
+  if (measurement) {
+    if (baseline === '' || actual === '') measurementError = '두 무게를 모두 입력하거나 모두 비워주세요.';
+    else {
+      try { preview = estimateCarbon(challengeToVerify, measurement).estimatedKgCO2e; }
+      catch (error) { measurementError = (error as Error).message; }
+    }
+  }
 
   // Preset sample photo options for fast testing
   const samplePhotos: { label: string; url: string }[] = [
@@ -57,11 +77,15 @@ export const VerificationModal: React.FC = () => {
     }, 1500);
   };
 
-  const handleConfirm = () => {
-    if (!selectedImage) return;
-    completeCertification(challengeToVerify.id, selectedImage);
-    setSelectedImage(null);
-    setScanComplete(false);
+  const handleConfirm = async () => {
+    if (!selectedImage || measurementError) return;
+    if (saving) return;
+    setSaving(true); setSaveError('');
+    try {
+      await completeCertification(challengeToVerify.id, selectedImage, measurement);
+      setSelectedImage(null); setScanComplete(false);
+    } catch (error) { setSaveError(error instanceof Error ? error.message : '저장하지 못했어요. 다시 시도해주세요.'); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -105,7 +129,7 @@ export const VerificationModal: React.FC = () => {
                     <Scan className="w-10 h-10 text-emerald-400 animate-spin" />
                     <p className="text-xs font-bold mt-2 text-emerald-200 flex items-center gap-1">
                       <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                      AI 이미지 판별 진행 중... (98.4%)
+                      인증 사진 준비 중... (시연)
                     </p>
                     <div className="w-48 bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
                       <div className="bg-emerald-400 h-full animate-pulse w-3/4" />
@@ -119,9 +143,9 @@ export const VerificationModal: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
                       <div>
-                        <span className="font-bold text-emerald-200">AI 판별 성공!</span>
+                        <span className="font-bold text-emerald-200">사진 준비 완료</span>
                         <p className="text-[10px] text-emerald-100/90">
-                          {challengeToVerify.categoryName} 관련 행동 객체 검증됨
+                          실천 내용과 입력 무게를 확인해주세요
                         </p>
                       </div>
                     </div>
@@ -184,20 +208,35 @@ export const VerificationModal: React.FC = () => {
             </div>
           </div>
 
+          {hasMeasurement && (
+            <section className="rounded-xl bg-emerald-50 p-3 space-y-2 text-xs text-emerald-900">
+              <h4 className="font-bold">음식물쓰레기 감축 무게 (선택)</h4>
+              <p>같은 식사량·조건에서 평소 남기는 무게와 이번에 남긴 무게를 측정해 입력해주세요. 먹은 음식의 무게가 아니에요.</p>
+              <label className="block">비교 기준 잔반 (g)
+                <input type="number" min="0" step="any" value={baseline} onChange={e => setBaseline(e.target.value)} className="mt-1 w-full rounded-lg bg-white border p-2" placeholder="예: 200" />
+              </label>
+              <label className="block">실천 후 잔반 (g)
+                <input type="number" min="0" step="any" value={actual} onChange={e => setActual(e.target.value)} className="mt-1 w-full rounded-lg bg-white border p-2" placeholder="예: 50" />
+              </label>
+              {measurementError ? <p role="alert" className="text-red-700">{measurementError}</p> : preview !== null ? <p role="status">감축 추정량: {preview} kg CO₂e</p> : <p>무게를 입력하지 않으면 CO₂는 계산하지 않고 포인트만 반영해요.</p>}
+              <p className="text-[10px]">감축 무게(kg) × 1.65. 제공된 창원시 자료의 추정치이며 진주시 공인 실적이 아닙니다.</p>
+            </section>
+          )}
           {/* Verification Status Notice */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex items-start space-x-2 text-[11px] text-amber-800">
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">AI 자율 정밀 검수 시스템 확장 지원</span>
+              <span className="font-bold">시범 인증 안내</span>
               <p className="text-[10px] text-amber-700 mt-0.5">
-                현재 프로토타입 버전에서는 사진 선택 시 AI 자동 검수 로직이 실행되어 즉시 포인트와 탄소절감량이 반영됩니다.
+                사진 확인은 시연용입니다. 무게는 사진으로 판별하지 않으며, 측정값과 적용 가능한 계수가 있을 때만 CO₂ 추정량을 기록합니다.
               </p>
             </div>
           </div>
 
           {/* Final Submit Button */}
+          {saveError && <p role="alert" className="text-xs text-red-700">{saveError}</p>}
           <button
-            disabled={!selectedImage || isScanning}
+            disabled={saving || !selectedImage || isScanning || !!measurementError}
             onClick={handleConfirm}
             className={`w-full py-3.5 rounded-2xl font-bold text-sm shadow-lg flex items-center justify-center space-x-2 transition-all ${
               selectedImage && !isScanning
@@ -206,7 +245,7 @@ export const VerificationModal: React.FC = () => {
             }`}
           >
             <CheckCircle className="w-4 h-4" />
-            <span>실천 인증 완료하기</span>
+            <span>{saving ? '계정에 저장 중...' : '실천 인증 완료하기'}</span>
           </button>
         </div>
       </div>

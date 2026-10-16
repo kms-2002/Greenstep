@@ -1,3 +1,4 @@
+import { koreanDay } from '../../../lib/backend';
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { VirtualTree } from '../VirtualTree';
@@ -24,6 +25,9 @@ import { getChallengeRewardPoints } from '../../../lib/challengeRewards';
 
 export const HomeTab: React.FC = () => {
   const { user, challenges, participations, setActiveTab } = useApp();
+  const measuredEstimateTotal = participations
+    .filter(p => p.userId === user.id && p.status === 'completed' && p.carbonEstimate?.status === 'estimated')
+    .reduce((sum, p) => sum + (p.carbonEstimate?.estimatedKgCO2e ?? 0), 0);
 
   // Banner carousel index state (1/3)
   const [currentBanner, setCurrentBanner] = useState(0);
@@ -58,15 +62,15 @@ export const HomeTab: React.FC = () => {
     },
   ];
 
-  const weeklyData = [
-    { day: '월', carbon: 0.8 },
-    { day: '화', carbon: 1.4 },
-    { day: '수', carbon: 2.1 },
-    { day: '목', carbon: 1.1 },
-    { day: '금', carbon: user.todayCarbonReduction },
-    { day: '토', carbon: 0.0 },
-    { day: '일', carbon: 0.0 },
-  ];
+  const todayKey=koreanDay();
+  const noon=new Date(todayKey+'T12:00:00+09:00');
+  const monday=new Date(noon);monday.setUTCDate(noon.getUTCDate()-(noon.getUTCDay()+6)%7);
+  const weeklyData=['월','화','수','목','금','토','일'].map((day,index)=>{
+    const date=new Date(monday);date.setUTCDate(date.getUTCDate()+index);
+    return {day,carbon:participations.filter(p=>p.status==='completed'&&p.completedAt&&koreanDay(new Date(p.completedAt))===koreanDay(date)).reduce((sum,p)=>sum+p.carbonSaved,0)};
+  });
+  const monthRecords=participations.filter(p=>p.status==='completed'&&p.completedAt&&koreanDay(new Date(p.completedAt)).slice(0,7)===todayKey.slice(0,7));
+
 
   // Jinju Eco Stores Mock Data
   const jinjuEcoStores = [
@@ -136,13 +140,14 @@ export const HomeTab: React.FC = () => {
       {/* 3. Activity Stats 4 Grid Summary (활동 요약 메트릭) */}
       <div className="grid grid-cols-2 gap-3">
         <div className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">누적 탄소절감량</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">누적 감축 추정량</span>
           <div className="flex items-baseline space-x-1">
             <span className="text-xl font-black text-emerald-700 font-mono">
               {user.totalCarbonReduction.toFixed(1)}
             </span>
             <span className="text-xs font-bold text-slate-500">kg CO₂e</span>
           </div>
+          <p className="mt-1 text-[10px] text-slate-500">측정 무게와 제공 자료로 계산한 기록 {Number(measuredEstimateTotal.toFixed(6))} kg</p>
         </div>
 
         <div className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-xs">
@@ -473,10 +478,10 @@ export const HomeTab: React.FC = () => {
                 </div>
                 <div className="p-4 bg-slate-50 rounded-2xl text-xs space-y-2">
                   <div className="flex justify-between font-bold border-b pb-2">
-                    <span>9월 실천 달성도</span>
-                    <span className="text-emerald-600">12일 연속 성공 🔥</span>
+                    <span>{Number(todayKey.slice(5,7))}월 실천 달성도</span>
+                    <span className="text-emerald-600">{user.consecutiveDays}일 연속 실천</span>
                   </div>
-                  <p className="text-[11px] text-slate-500">이번 달 총 절감량: 8.4 kg CO₂e / 획득 포인트: 450 P</p>
+                  <p className="text-[11px] text-slate-500">이번 달 감축 추정량: {monthRecords.reduce((sum,p)=>sum+p.carbonSaved,0).toFixed(4)} kg CO₂e / 챌린지 포인트: {monthRecords.reduce((sum,p)=>sum+p.pointsEarned,0)} P</p>
                 </div>
               </div>
             )}
