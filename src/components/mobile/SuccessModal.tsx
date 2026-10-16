@@ -39,6 +39,11 @@ export const SuccessModal: React.FC = () => {
 
         </div>
 
+        <p className="mb-4 text-xs text-slate-500">
+          {completionResult.carbonEstimate.status === 'estimated'
+            ? `제공 자료 기준 감축 추정량 ${completionResult.carbonEstimate.estimatedKgCO2e} kg CO₂e (입력 무게 기준)`
+            : completionResult.carbonEstimate.reason}
+        </p>
         {/* Level Up Notification if triggered */}
         {leveledUp && (
           <div className="mb-3 p-3 bg-amber-500/10 border border-amber-400 rounded-2xl flex items-center space-x-2 text-left animate-pulse">

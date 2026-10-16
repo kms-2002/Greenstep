@@ -1,3 +1,4 @@
+import { rpc } from '../../../lib/backend';
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { Avatar } from '../../common/Avatar';
@@ -10,7 +11,6 @@ import {
   FileText,
   GraduationCap,
   LogOut,
-  RefreshCw,
   Settings,
   Shield,
   Target,
@@ -20,7 +20,12 @@ import {
 } from 'lucide-react';
 
 export const MyPageTab: React.FC = () => {
-  const { user, badges, logout, updateProfile, resetAllData } = useApp();
+  const { user, badges, logout, updateProfile, refreshAccount, refreshMembers } = useApp();
+  const [editing,setEditing]=useState(false);
+  const [draft,setDraft]=useState(user);
+  const [profileError,setProfileError]=useState('');
+  const [saving,setSaving]=useState(false);
+  const [profileMessage,setProfileMessage]=useState('');
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
@@ -113,10 +118,17 @@ export const MyPageTab: React.FC = () => {
 
       <FriendsPanel user={user} />
 
+      {editing && <form className="rounded-2xl border bg-white p-4 space-y-3" onSubmit={async e=>{e.preventDefault();if(saving)return;setSaving(true);setProfileError('');try{await rpc('gs_update_profile',{p:draft});await refreshAccount();await refreshMembers();setEditing(false);}catch(error){setProfileError((error as Error).message);}finally{setSaving(false);}}}>
+        <h3 className="font-bold text-sm">프로필과 소속 정보</h3>
+        <label className="block text-xs">회원 구분<select value={draft.memberType} onChange={e=>setDraft({...draft,memberType:e.target.value as 'student'|'citizen'})} className="ml-2 border rounded p-2"><option value="student">대학생</option><option value="citizen">진주시민</option></select></label>
+        {(['nickname','university','college','department','grade','studentId'] as const).map((key,i)=><label key={key} className="block text-xs">{['닉네임','학교','단과대학','학과','학년','학번 (비공개)'][i]}<input required={key==='nickname'} maxLength={key==='nickname'?40:120} value={draft[key]??''} onChange={e=>setDraft({...draft,[key]:e.target.value})} className="mt-1 block w-full rounded-xl border p-2" /></label>)}
+        {profileError&&<p role="alert" className="text-xs text-red-700">{profileError}</p>}
+        <button disabled={saving} className="rounded-xl bg-emerald-700 px-4 py-2 text-white text-xs">{saving?'저장 중...':'저장'}</button><button type="button" className="ml-4 text-xs" onClick={()=>setEditing(false)}>닫기</button>
+      </form>}
       {/* Main Settings & Info Menu List */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-100">
         <button
-          onClick={() => setShowAvatarPicker(true)}
+          onClick={() => {setDraft(user);setEditing(true);}}
           className="w-full p-3.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors"
         >
           <div className="flex items-center space-x-3">
@@ -162,7 +174,7 @@ export const MyPageTab: React.FC = () => {
         </button>
 
         <button
-          onClick={() => alert('개인정보처리방침 - 학과 및 닉네임 데이터 보호 정책 안내')}
+          onClick={() => setProfileMessage('이메일·학번·인증 사진은 본인만 조회합니다. 닉네임·학교·포인트·감축 합계는 가입자 랭킹에 표시됩니다. 상세 챌린지 기록은 공개 설정을 켰을 때 친구에게만 보입니다. 데이터는 Supabase에 저장됩니다.')}
           className="w-full p-3.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors"
         >
           <div className="flex items-center space-x-3">
@@ -173,20 +185,9 @@ export const MyPageTab: React.FC = () => {
         </button>
       </div>
 
+      {profileMessage && <p className="rounded-xl bg-slate-100 p-3 text-xs leading-relaxed">{profileMessage}</p>}
       {/* Account System Options: Reset & Logout */}
       <div className="space-y-2 pt-2">
-        <button
-          onClick={() => {
-            if (confirm('샘플 데모 데이터를 처음 상태로 초기화할까요?')) {
-              resetAllData();
-            }
-          }}
-          className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-2xl flex items-center justify-center space-x-1.5 transition-colors"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>데모 데이터 초기화</span>
-        </button>
-
         <button
           onClick={logout}
           className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-2xl flex items-center justify-center space-x-1.5 transition-colors"

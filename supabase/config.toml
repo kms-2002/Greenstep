@@ -1,4 +1,4 @@
 [functions.greenstep-chat]
-# The prototype currently uses localStorage instead of Supabase Auth, so requests
-# cannot carry a signed-in user's Supabase JWT yet. Add server-side auth before launch.
+# Public chat remains available without a session. Quiz requests explicitly verify
+# the user's access token inside the function before accessing private quiz records.
 verify_jwt = false

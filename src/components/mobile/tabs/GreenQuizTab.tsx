@@ -1,3 +1,4 @@
+import { rpc } from '../../../lib/backend';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Award, Clover, CalendarCheck, CheckCircle2, CircleHelp, Flame, RotateCcw, Sparkles, Target, Zap } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
@@ -40,36 +41,21 @@ const getStreak = (answers: Record<string, QuizAnswer>, startDay: string) => {
   return streak;
 };
 
-const readProgress = (storageKey: string): QuizProgress => {
-  try {
-    const saved = localStorage.getItem(storageKey);
-    if (!saved) return emptyProgress;
-    const parsed = JSON.parse(saved) as Partial<QuizProgress>;
-    return {
-      answers: parsed.answers ?? {},
-      rewardedStreaks: parsed.rewardedStreaks ?? [],
-      rewardedWeeks: parsed.rewardedWeeks ?? [],
-    };
-  } catch {
-    return emptyProgress;
-  }
-};
-
 export const GreenQuizTab: React.FC = () => {
   const { user } = useApp();
-  return <UserGreenQuiz key={user.university + ':' + (user.studentId || user.id)} />;
+  return <UserGreenQuiz key={user.id} />;
 };
 const UserGreenQuiz: React.FC = () => {
-  const { user, updateProfile, challenges, participations, setActiveTab } = useApp();
-  const storageKey = STORAGE_KEY + ':' + user.university + ':' + (user.studentId || user.id);
-  const [progress, setProgress] = useState<QuizProgress>(() => {
-    if (!localStorage.getItem(STORAGE_KEY + ':migrationOwner')) {
-      const legacy = localStorage.getItem(STORAGE_KEY);
-      if (legacy && !localStorage.getItem(storageKey)) localStorage.setItem(storageKey, legacy);
-      localStorage.setItem(STORAGE_KEY + ':migrationOwner', storageKey);
-    }
-    return readProgress(storageKey);
-  });
+  const { user, refreshAccount, refreshMembers, challenges, participations, setActiveTab } = useApp();
+  const storageKey = STORAGE_KEY + ':' + user.id;
+  const [progress,setProgress]=useState<QuizProgress>(emptyProgress);
+  const [historyReady,setHistoryReady]=useState(false);
+  useEffect(()=>{let active=true;rpc<any[]>('gs_quiz_history').then(rows=>{
+    if(!active)return;
+    const answers:Record<string,QuizAnswer>={};
+    for(const r of rows)answers[r.day]={questionId:r.question.id,selectedIndex:r.selected_index,correct:r.correct,rewardPoints:r.points,rewardMessages:r.messages,question:r.question};
+    setProgress({answers,rewardedStreaks:[],rewardedWeeks:[]});setHistoryReady(true);
+  }).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[]);
   const [feedback, setFeedback] = useState<{ rewards: number; messages: string[] } | null>(null);
   const [today, setToday] = useState(getKoreaDateKey);
   useEffect(() => {
@@ -110,7 +96,7 @@ const UserGreenQuiz: React.FC = () => {
   useEffect(() => {
     let active = true;
     submitted.current = false;
-    if (todayAnswer || readQuiz(quizKey)) return;
+    if (!historyReady || todayAnswer || readQuiz(quizKey)) return;
     setError('');
     requestQuiz(quizKey, context).then(question => {
       if (active) setQuizState({ key: quizKey, quiz: question });
@@ -121,7 +107,7 @@ const UserGreenQuiz: React.FC = () => {
         : reason instanceof Error ? reason.message : '문제 생성에 실패했어요.');
     });
     return () => { active = false; };
-  }, [quizKey, todayAnswer, context, retry]);
+  }, [quizKey, todayAnswer, context, retry, historyReady]);
 
   const currentStreak = getStreak(progress.answers, todayAnswer ? today : shiftDay(today, -1));
   const weekCount = Object.keys(progress.answers).filter((day) => getWeekKey(day) === weekKey).length;
@@ -130,46 +116,18 @@ const UserGreenQuiz: React.FC = () => {
       || challenges.find((challenge) => challenge.active && challenge.category === quiz?.category)
     : undefined;
 
-  const submitAnswer = (selectedIndex: number) => {
-    if (!quiz || todayAnswer || submitted.current || readProgress(storageKey).answers[today]) return;
-    submitted.current = true;
-    const correct = selectedIndex === quiz.answerIndex;
-    const answers = { ...progress.answers, [today]: { questionId: quiz.id, selectedIndex, correct } };
-    const rewardedStreaks = [...progress.rewardedStreaks];
-    const rewardedWeeks = [...progress.rewardedWeeks];
-    const messages: string[] = [];
-    let pointsEarned = 0;
-
-    if (correct) {
-      pointsEarned += 10;
-      messages.push('오늘의 퀴즈 정답 +10P');
-    }
-
-    const streak = getStreak(answers, today);
-    if (streak === 3 && !rewardedStreaks.includes(3)) {
-      pointsEarned += 30;
-      rewardedStreaks.push(3);
-      messages.push('3일 연속 퀴즈 참여 +30P');
-    }
-    if (streak === 7 && !rewardedStreaks.includes(7)) {
-      pointsEarned += 100;
-      rewardedStreaks.push(7);
-      messages.push('7일 연속 퀴즈 참여 +100P');
-    }
-
-    const completedThisWeek = Object.keys(answers).filter((day) => getWeekKey(day) === weekKey).length;
-    if (completedThisWeek >= 5 && !rewardedWeeks.includes(weekKey)) {
-      pointsEarned += 50;
-      rewardedWeeks.push(weekKey);
-      messages.push('이번 주 퀴즈 5개 완료 +50P');
-    }
-
-    answers[today] = { questionId: quiz.id, selectedIndex, correct, rewardPoints: pointsEarned, rewardMessages: messages, question: quiz };
-    const nextProgress = { answers, rewardedStreaks, rewardedWeeks };
-    setProgress(nextProgress);
-    localStorage.setItem(storageKey, JSON.stringify(nextProgress));
-    if (pointsEarned > 0) updateProfile({ points: user.points + pointsEarned });
-    setFeedback({ rewards: pointsEarned, messages });
+  const submitAnswer=async(selectedIndex:number)=>{
+    if(!quiz || todayAnswer || submitted.current || !historyReady)return;
+    submitted.current=true;setError('');
+    try{
+      const result=await rpc('gs_quiz_submit',{p_index:selectedIndex});
+      const rows=await rpc<any[]>('gs_quiz_history');
+      const answers:Record<string,QuizAnswer>={};
+      for(const r of rows)answers[r.day]={questionId:r.question.id,selectedIndex:r.selected_index,correct:r.correct,rewardPoints:r.points,rewardMessages:r.messages,question:r.question};
+      setProgress({answers,rewardedStreaks:[],rewardedWeeks:[]});
+      setFeedback({rewards:result.points,messages:result.messages});
+      await refreshAccount();await refreshMembers();
+    }catch(e){setError((e as Error).message);submitted.current=false;}
   };
 
   const previousAnswerCorrect = todayAnswer?.correct;

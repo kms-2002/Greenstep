@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import type {
   Badge,
   CarbonFactor,
@@ -8,21 +8,16 @@ import type {
   PersonalRank,
   User,
 } from '../types';
-import {
-  INITIAL_BADGES,
-  INITIAL_CHALLENGES,
-  INITIAL_DEPARTMENT_RANKS,
-  INITIAL_PERSONAL_RANKS,
-  INITIAL_USER,
-} from '../mock/initialData';
-import { INITIAL_CARBON_FACTORS, calculateTreeInfo } from '../utils/carbonCalculator';
-import { getChallengeRewardPoints } from '../lib/challengeRewards';
-import confetti from 'canvas-confetti';
+import { INITIAL_BADGES, INITIAL_CHALLENGES } from '../mock/initialData';
+import { INITIAL_CARBON_FACTORS } from '../utils/carbonCalculator';
+import type { CarbonEstimate, WasteMeasurement } from '../lib/carbonEstimate';
+import { backend, emptyUser, loadAccount, rpc, type Member } from '../lib/backend';
 
 export type TabType = 'home' | 'challenge' | 'ranking' | 'quiz' | 'my';
 export type ViewMode = 'mobile' | 'admin';
 
 interface CompletionResult {
+  carbonEstimate: CarbonEstimate;
   challengeTitle: string;
   carbonSaved: number;
   pointsEarned: number;
@@ -64,11 +59,14 @@ interface AppContextType {
   openAuthModal: (tab?: 'login' | 'signup') => void;
 
   // Actions
-  login: (nickname: string, university: string, department: string, grade: string, studentId?: string, avatarId?: string, college?: string, memberType?: 'student' | 'citizen') => void;
+  refreshAccount: () => Promise<void>;
+  members: Member[];
+  refreshMembers: () => Promise<void>;
+  loading: boolean;
   logout: () => void;
   updateProfile: (updated: Partial<User>) => void;
   joinChallenge: (challengeId: string) => void;
-  completeCertification: (challengeId: string, imageSrc?: string) => void;
+  completeCertification: (challengeId: string, imageSrc?: string, measurement?: WasteMeasurement) => Promise<void>;
 
   // Admin Actions
   addAdminChallenge: (newCh: Omit<Challenge, 'id' | 'participantsCount' | 'active'>) => void;
@@ -79,100 +77,64 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'greenstep_app_state_gnu_v4';
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_user`);
-    return saved ? JSON.parse(saved) : INITIAL_USER;
+  const [user,setUser]=useState<User>(emptyUser);
+  const [isAuthenticated,setIsAuthenticated]=useState(false);
+  const [loading,setLoading]=useState(true);
+  const [syncError,setSyncError]=useState('');
+  const accountId=useRef<string | null>(null);
+  const [activeTab,setActiveTab]=useState<TabType>('home');
+  const [viewMode,setViewMode]=useState<ViewMode>('mobile');
+  const [challenges,setChallenges]=useState<Challenge[]>(INITIAL_CHALLENGES);
+  const [participations,setParticipations]=useState<Participation[]>([]);
+  const [members,setMembers]=useState<Member[]>([]);
+  const badges: Badge[]=INITIAL_BADGES.map(b=>{
+    const completed=participations.filter(p=>p.status==='completed');
+    const reached=b.requirementType==='count'?completed.length>=b.requirementValue:b.requirementType==='streak'?user.consecutiveDays>=b.requirementValue:b.requirementType==='carbon'?user.totalCarbonReduction>=b.requirementValue:false;
+    return {...b,unlockedAt:reached?user.lastActiveDate:undefined};
   });
-
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem(`${STORAGE_KEY}_auth`) === 'true';
-  });
-
-  const [activeTab, setActiveTab] = useState<TabType>('home');
-  const [viewMode, setViewMode] = useState<ViewMode>('mobile');
-
-  const [challenges, setChallenges] = useState<Challenge[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_challenges`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.some((c: Challenge) => c.title.includes('진주') || c.title.includes('GNU'))) {
-        const savedIds = new Set(parsed.map((challenge: Challenge) => challenge.id));
-        const migrated = parsed.map((challenge: Challenge) => {
-          const canonical = INITIAL_CHALLENGES.find((initial) => initial.id === challenge.id);
-          if (!canonical) return challenge;
-          return {
-            ...challenge,
-            title: canonical.title,
-            category: canonical.category,
-            categoryName: canonical.categoryName,
-            categoryIcon: canonical.categoryIcon,
-            description: canonical.description,
-            detailGuide: canonical.detailGuide,
-            unitDescription: canonical.unitDescription,
-            verificationMethod: canonical.verificationMethod,
-            rewardPoints: canonical.rewardPoints,
-            officialIncentiveId: canonical.officialIncentiveId,
-            officialIncentiveQuantity: canonical.officialIncentiveQuantity,
-            active: canonical.active,
-          };
-        });
-        return [
-          ...migrated,
-          ...INITIAL_CHALLENGES.filter((challenge) => challenge.active && !savedIds.has(challenge.id)),
-        ];
+  const personalRanks: PersonalRank[]=members.map((m,i)=>({rank:i+1,userId:m.id,nickname:m.nickname,university:m.university,department:m.department,carbonReduction:m.carbonReduction,points:m.points,isCurrentUser:m.id===user.id}));
+  const departmentRanks: DepartmentRank[]=[];
+  const carbonFactors=INITIAL_CARBON_FACTORS;
+  const refreshMembers=useCallback(async()=>{
+    const id=accountId.current;if(!id)return;
+    const data=await rpc<Member[]>('gs_members');if(accountId.current===id)setMembers(data);
+  },[]);
+  const refreshAccount=useCallback(async()=>{
+    const id=accountId.current;if(!id)return;
+    const data=await loadAccount(id);
+    if(accountId.current!==id)return;
+    setUser(data.user);setParticipations(data.participations);setIsAuthenticated(true);setSyncError('');
+  },[]);
+  useEffect(()=>{
+    let active=true;
+    const {data:{subscription}}=backend.auth.onAuthStateChange((_event,session)=>{
+      const next=session?.user.id??null;
+      if(next!==accountId.current){
+        accountId.current=next;setUser(emptyUser);setParticipations([]);setMembers([]);setIsAuthenticated(false);
+        setSelectedChallenge(null);setChallengeToVerify(null);setIsVerificationOpen(false);setIsSuccessModalOpen(false);
       }
+      if(!next){setLoading(false);return;}
+      setLoading(true);
+      // Schedule outside the Auth callback to avoid holding the session lock.
+      setTimeout(()=>{
+        if(!active || accountId.current!==next)return;
+        Promise.all([refreshAccount(),refreshMembers()]).then(()=>{
+          if(active && accountId.current===next){setIsAuthModalOpen(false);if(sessionStorage.getItem('greenstep_pending_invite'))setActiveTab('my');}
+        }).catch(e=>{if(active && accountId.current===next)setSyncError(e.message);})
+          .finally(()=>{if(active && accountId.current===next)setLoading(false);});
+      },0);
+    });
+    const params=new URLSearchParams(location.search);const invite=params.get('invite');
+    if(invite && /^[0-9a-f-]{36}$/i.test(invite)){
+      sessionStorage.setItem('greenstep_pending_invite',invite);params.delete('invite');
+      history.replaceState(null,'',location.pathname+(params.size?'?'+params.toString():'')+location.hash);
     }
-    return INITIAL_CHALLENGES;
-  });
-
-  const [participations, setParticipations] = useState<Participation[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_participations`);
-    if (saved) return JSON.parse(saved);
-    return [
-      {
-        id: 'p-1',
-        userId: INITIAL_USER.id,
-        challengeId: 'ch-life-1',
-        status: 'completed',
-        joinedAt: '2026-09-10T10:00:00Z',
-        completedAt: '2026-09-10T10:15:00Z',
-        carbonSaved: 0.1,
-        pointsEarned: 10,
-      },
-      {
-        id: 'p-2',
-        userId: INITIAL_USER.id,
-        challengeId: 'ch-transport-1',
-        status: 'completed',
-        joinedAt: '2026-09-11T09:00:00Z',
-        completedAt: '2026-09-11T09:30:00Z',
-        carbonSaved: 1.2,
-        pointsEarned: 30,
-      },
-      {
-        id: 'p-3',
-        userId: INITIAL_USER.id,
-        challengeId: 'ch-resource-1',
-        status: 'completed',
-        joinedAt: '2026-09-11T12:30:00Z',
-        completedAt: '2026-09-11T13:00:00Z',
-        carbonSaved: 1.0,
-        pointsEarned: 35,
-      },
-    ];
-  });
-
-  const [badges, setBadges] = useState<Badge[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_badges`);
-    return saved ? JSON.parse(saved) : INITIAL_BADGES;
-  });
-
-  const [personalRanks, setPersonalRanks] = useState<PersonalRank[]>(INITIAL_PERSONAL_RANKS);
-  const [departmentRanks, setDepartmentRanks] = useState<DepartmentRank[]>(INITIAL_DEPARTMENT_RANKS);
-  const [carbonFactors] = useState<CarbonFactor[]>(INITIAL_CARBON_FACTORS);
+    const sync=()=>{if(accountId.current)Promise.all([refreshAccount(),refreshMembers()]).catch(e=>setSyncError(e.message));};
+    window.addEventListener('focus',sync);
+    const timer=window.setInterval(()=>{if(document.visibilityState==='visible')sync();},60000);
+    return()=>{active=false;subscription.unsubscribe();window.removeEventListener('focus',sync);window.clearInterval(timer);};
+  },[refreshAccount,refreshMembers]);
 
   // Modals
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
@@ -188,215 +150,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAuthModalOpen(true);
   };
 
-  // Save to LocalStorage
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_user`, JSON.stringify(user));
-  }, [user]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_auth`, String(isAuthenticated));
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_challenges`, JSON.stringify(challenges));
-  }, [challenges]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_participations`, JSON.stringify(participations));
-  }, [participations]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_badges`, JSON.stringify(badges));
-  }, [badges]);
-
-  // Update Ranks whenever user changes
-  useEffect(() => {
-    setPersonalRanks((prev) =>
-      prev
-        .map((r) =>
-          r.isCurrentUser
-            ? {
-                ...r,
-                nickname: user.nickname,
-                university: user.university,
-                department: user.department,
-                carbonReduction: user.totalCarbonReduction,
-                points: user.points,
-              }
-            : r
-        )
-        .sort((a, b) => b.carbonReduction - a.carbonReduction)
-        .map((r, idx) => ({ ...r, rank: idx + 1 }))
-    );
-
-    setDepartmentRanks((prev) =>
-      prev
-        .map((d) =>
-          d.department === user.department
-            ? {
-                ...d,
-                totalCarbonReduction: parseFloat(
-                  (d.totalCarbonReduction + user.todayCarbonReduction * 0.1).toFixed(1)
-                ),
-              }
-            : d
-        )
-        .sort((a, b) => b.totalCarbonReduction - a.totalCarbonReduction)
-        .map((d, idx) => ({ ...d, rank: idx + 1 }))
-    );
-  }, [user.totalCarbonReduction, user.nickname, user.university, user.department, user.points]);
-
-  const login = (nickname: string, university: string, department: string, grade: string, studentId?: string, avatarId?: string, college?: string, memberType: 'student' | 'citizen' = 'student') => {
-    setUser((prev) => ({
-      ...prev,
-      nickname,
-      memberType,
-      university,
-      college: college || '',
-      department,
-      grade,
-      studentId: studentId || prev.studentId || '20230101',
-      profileAvatarId: avatarId || prev.profileAvatarId || 'avatar-hamo',
-    }));
-    setIsAuthenticated(true);
-    setIsAuthModalOpen(false);
+  const logout=()=>{
+    backend.auth.signOut().then(({error})=>{if(error)setSyncError(error.message);else {setActiveTab('home');setIsAuthModalOpen(false);}});
   };
-
-  const logout = () => {
-    setIsAuthenticated(false);
-    setIsAuthModalOpen(true);
+  const updateProfile=(updated:Partial<User>)=>{
+    rpc('gs_update_profile',{p:updated}).then(refreshAccount).then(refreshMembers).catch(e=>setSyncError(e.message));
   };
-
-  const updateProfile = (updated: Partial<User>) => {
-    setUser((prev) => ({ ...prev, ...updated }));
+  const joinChallenge=(challengeId:string)=>{
+    rpc('gs_join',{p_challenge:challengeId}).then(refreshAccount).catch(e=>setSyncError(e.message));
   };
-
-  const joinChallenge = (challengeId: string) => {
-    const existing = participations.find((p) => p.challengeId === challengeId && p.status === 'in_progress');
-    if (!existing) {
-      const newPart: Participation = {
-        id: `p-${Date.now()}`,
-        userId: user.id,
-        challengeId,
-        status: 'in_progress',
-        joinedAt: new Date().toISOString(),
-        carbonSaved: 0,
-        pointsEarned: 0,
-      };
-      setParticipations((prev) => [newPart, ...prev]);
-    }
-  };
-
-  const completeCertification = (challengeId: string, imageSrc?: string) => {
-    const targetChallenge = challenges.find((c) => c.id === challengeId);
-    if (!targetChallenge) return;
-
-    const carbonSaved = targetChallenge.carbonReduction;
-    const pointsEarned = getChallengeRewardPoints(targetChallenge);
-
-    const prevTree = calculateTreeInfo(user.totalCarbonReduction);
-
-    const newTotalCarbon = parseFloat((user.totalCarbonReduction + carbonSaved).toFixed(2));
-    const newTodayCarbon = parseFloat((user.todayCarbonReduction + carbonSaved).toFixed(2));
-    const newWeekCarbon = parseFloat((user.weekCarbonReduction + carbonSaved).toFixed(2));
-    const newPoints = user.points + pointsEarned;
-    const newStreak = user.consecutiveDays + 1;
-
-    const nextTree = calculateTreeInfo(newTotalCarbon);
-    const leveledUp = nextTree.level > prevTree.level;
-
-    let newlyUnlockedBadge: Badge | undefined;
-
-    setBadges((prevBadges) => {
-      return prevBadges.map((b) => {
-        if (!b.unlockedAt) {
-          let unlock = false;
-          if (b.requirementType === 'count' && participations.length + 1 >= b.requirementValue) {
-            unlock = true;
-          } else if (b.requirementType === 'streak' && newStreak >= b.requirementValue) {
-            unlock = true;
-          } else if (b.requirementType === 'carbon' && newTotalCarbon >= b.requirementValue) {
-            unlock = true;
-          }
-
-          if (unlock) {
-            newlyUnlockedBadge = { ...b, unlockedAt: new Date().toISOString().split('T')[0] };
-            return newlyUnlockedBadge;
-          }
-        }
-        return b;
-      });
-    });
-
-    setUser((prev) => ({
-      ...prev,
-      totalCarbonReduction: newTotalCarbon,
-      todayCarbonReduction: newTodayCarbon,
-      weekCarbonReduction: newWeekCarbon,
-      points: newPoints,
-      consecutiveDays: newStreak,
-      level: nextTree.level,
-    }));
-
-    setParticipations((prev) => {
-      const existingIdx = prev.findIndex((p) => p.challengeId === challengeId && p.status === 'in_progress');
-      if (existingIdx >= 0) {
-        const updated = [...prev];
-        updated[existingIdx] = {
-          ...updated[existingIdx],
-          status: 'completed',
-          completedAt: new Date().toISOString(),
-          verificationImage: imageSrc || targetChallenge.imageUrl,
-          aiVerificationScore: 98.4,
-          carbonSaved,
-          pointsEarned,
-        };
-        return updated;
-      } else {
-        return [
-          {
-            id: `p-${Date.now()}`,
-            userId: user.id,
-            challengeId,
-            status: 'completed',
-            joinedAt: new Date().toISOString(),
-            completedAt: new Date().toISOString(),
-            verificationImage: imageSrc || targetChallenge.imageUrl,
-            aiVerificationScore: 98.4,
-            carbonSaved,
-            pointsEarned,
-          },
-          ...prev,
-        ];
+  const completing=useRef(false);
+  const pendingCompletion=useRef<{key:string;id:string;path?:string}|null>(null);
+  const completeCertification=async(challengeId:string,imageSrc?:string,measurement?:WasteMeasurement)=>{
+    if(completing.current)throw new Error('저장 중입니다. 잠시 기다려주세요.');
+    if(!accountId.current || !imageSrc)throw new Error('로그인과 인증 사진이 필요합니다.');
+    completing.current=true;
+    const id=accountId.current;
+    try{
+      const key=id+':'+challengeId;
+      let pending=pendingCompletion.current;
+      if(!pending || pending.key!==key){pending={key,id:await rpc<string>('gs_join',{p_challenge:challengeId})};pendingCompletion.current=pending;}
+      if(!pending.path){
+        const blob=await (await fetch(imageSrc)).blob();
+        if(blob.size>5*1024*1024)throw new Error('사진은 5MB 이하로 올려주세요.');
+        const path=`${id}/${pending.id}/${crypto.randomUUID()}`;
+        const {error}=await backend.storage.from('greenstep-evidence').upload(path,blob,{contentType:blob.type});
+        if(error)throw error;pending.path=path;
       }
-    });
-
-    setChallenges((prev) =>
-      prev.map((c) => (c.id === challengeId ? { ...c, participantsCount: c.participantsCount + 1 } : c))
-    );
-
-    try {
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#10B981', '#34D399', '#F59E0B', '#6366F1'],
-      });
-    } catch {
-      // Fallback
-    }
-
-    setCompletionResult({
-      challengeTitle: targetChallenge.title,
-      carbonSaved,
-      pointsEarned,
-      unlockedBadge: newlyUnlockedBadge,
-      leveledUp,
-      newLevel: nextTree.level,
-    });
-
-    setIsVerificationOpen(false);
-    setIsSuccessModalOpen(true);
+      const result=await rpc('gs_complete',{p_id:pending.id,p_image:pending.path,p_baseline:measurement?.baselineGrams??null,p_actual:measurement?.actualGrams??null});
+      if(accountId.current!==id)return;
+      await refreshAccount();await refreshMembers();
+      setCompletionResult({challengeTitle:challenges.find(c=>c.id===challengeId)?.title??'',carbonSaved:Number(result.carbon_saved),pointsEarned:result.points,carbonEstimate:result.carbon_estimate});
+      pendingCompletion.current=null;setIsVerificationOpen(false);setIsSuccessModalOpen(true);
+    }finally{completing.current=false;}
   };
 
   const addAdminChallenge = (newChData: Omit<Challenge, 'id' | 'participantsCount' | 'active'>) => {
@@ -418,14 +204,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setChallenges((prev) => prev.filter((c) => c.id !== id));
   };
 
-  const resetAllData = () => {
-    localStorage.clear();
-    setUser(INITIAL_USER);
-    setChallenges(INITIAL_CHALLENGES);
-    setBadges(INITIAL_BADGES);
-    setIsAuthenticated(true);
-    window.location.reload();
-  };
+  const resetAllData=()=>{setSyncError('실제 계정의 데이터는 이 버튼으로 초기화하지 않습니다.');};
 
   return (
     <AppContext.Provider
@@ -460,7 +239,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         authInitialTab,
         openAuthModal,
 
-        login,
+        refreshAccount,
+        refreshMembers,
+        members,
+        loading,
         logout,
         updateProfile,
         joinChallenge,
@@ -472,6 +254,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         resetAllData,
       }}
     >
+      {syncError && <div role="alert" className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] max-w-sm rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800">서버 연결: {syncError}<button className="ml-2 underline" onClick={()=>{setSyncError('');refreshAccount().then(refreshMembers).catch(e=>setSyncError(e.message));}}>다시 연결</button><button className="ml-2 underline" onClick={logout}>로그아웃</button></div>}
       {children}
     </AppContext.Provider>
   );

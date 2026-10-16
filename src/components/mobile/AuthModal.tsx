@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { supabaseAuth } from '../../lib/supabase';
+import { backend } from '../../lib/backend';
 import { CUTE_AVATARS } from '../../types';
 import { JINJU_UNIVERSITY_CATALOG, JINJU_UNIVERSITY_NAMES } from '../../data/jinjuUniversityCatalog';
-import { Leaf, GraduationCap, UserCheck, Sparkles, X, Building, Lock, KeyRound, CheckCircle2, AlertCircle, RotateCcw, Smile } from 'lucide-react';
+import { Leaf, GraduationCap, UserCheck, Sparkles, X, Building, KeyRound, CheckCircle2, AlertCircle, RotateCcw, Smile } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
-  const { isAuthModalOpen, setIsAuthModalOpen, authInitialTab, login } = useApp();
+  const { isAuthModalOpen, setIsAuthModalOpen, authInitialTab } = useApp();
 
   const [isSignup, setIsSignup] = useState<boolean>(true);
 
   // Form Fields
+  const [email,setEmail]=useState('');
+  const [busy,setBusy]=useState(false);
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -47,102 +49,30 @@ export const AuthModal: React.FC = () => {
 
   if (!isAuthModalOpen) return null;
 
-  const handleQuickDemoFill = () => {
-    setStudentId('20230101');
-    setPassword('1234');
-    setErrorMessage('');
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
-
-    if (isSignup) {
-      // 1. 회원가입 처리 (Supabase DB 저장)
-      if (!studentId.trim()) {
-        setErrorMessage('학번을 입력해 주세요.');
-        return;
-      }
-      if (!password.trim()) {
-        setErrorMessage('비밀번호를 입력해 주세요.');
-        return;
-      }
-      if (password !== passwordConfirm) {
-        setErrorMessage('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
-        return;
-      }
-      if (!nickname.trim()) {
-        setErrorMessage('닉네임을 입력해 주세요.');
-        return;
-      }
-      if (memberType === 'student' && !universityName) {
-        setErrorMessage('대학교를 선택하거나 직접 입력해 주세요.');
-        return;
-      }
-      if (memberType === 'student' && (!collegeName || !departmentName)) {
-        setErrorMessage('단과대학과 학과를 선택하거나 직접 입력해 주세요.');
-        return;
-      }
-
-      // Supabase Auth DB 저장
-      const res = supabaseAuth.signUp({
-        studentId: studentId.trim(),
-        password,
-        memberType,
-        nickname: nickname.trim(),
-        university: memberType === 'citizen' ? '진주시민' : universityName,
-        college: memberType === 'citizen' ? '' : collegeName,
-        department: memberType === 'citizen' ? '' : departmentName,
-        grade: memberType === 'citizen' ? '시민' : grade,
-        profileAvatarId: selectedAvatarId,
-      });
-
-      if (!res.success) {
-        setErrorMessage(res.message);
-        return;
-      }
-
-      setSuccessMessage('Supabase DB에 회원가입 정보가 기록되었습니다!');
-      setTimeout(() => {
-        login(nickname.trim(), memberType === 'citizen' ? '진주시민' : universityName, memberType === 'citizen' ? '' : departmentName, memberType === 'citizen' ? '시민' : grade, studentId.trim(), selectedAvatarId, memberType === 'citizen' ? '' : collegeName, memberType);
-      }, 700);
-
-    } else {
-      // 2. 로그인 처리 (Supabase DB 검증)
-      if (!studentId.trim()) {
-        setErrorMessage('학번을 입력해 주세요.');
-        return;
-      }
-      if (!password.trim()) {
-        setErrorMessage('비밀번호를 입력해 주세요.');
-        return;
-      }
-
-      const res = supabaseAuth.signIn(studentId.trim(), password);
-
-      if (!res.success) {
-        setErrorMessage(res.message);
-        return;
-      }
-
-      const registeredUser = res.user;
-      if (registeredUser) {
-        setSuccessMessage('Supabase DB 인증 성공! 로그인합니다.');
-        setTimeout(() => {
-          login(
-            registeredUser.nickname,
-            registeredUser.university,
-            registeredUser.department,
-            registeredUser.grade,
-            registeredUser.studentId,
-            registeredUser.profileAvatarId,
-            registeredUser.college,
-            registeredUser.memberType
-          );
-        }, 500);
-      }
+  const handleSubmit=async(e:React.FormEvent)=>{
+    e.preventDefault();if(busy)return;
+    setErrorMessage('');setSuccessMessage('');
+    if(isSignup && (password!==passwordConfirm || !nickname.trim() || (memberType==='student' && (!studentId.trim() || !universityName || !collegeName || !departmentName)))){
+      setErrorMessage('비밀번호 확인과 회원 정보를 모두 입력해주세요.');return;
     }
+    setBusy(true);
+    try{
+      if(isSignup){
+        const {data,error}=await backend.auth.signUp({email:email.trim(),password,options:{
+          emailRedirectTo:location.origin+import.meta.env.BASE_URL,
+          data:{studentId:memberType==='student'?studentId.trim():'',nickname:nickname.trim(),memberType,
+            university:memberType==='citizen'?'진주시민':universityName,college:memberType==='citizen'?'':collegeName,
+            department:memberType==='citizen'?'':departmentName,grade:memberType==='citizen'?'시민':grade,profileAvatarId:selectedAvatarId}
+        }});
+        if(error)throw error;
+        setSuccessMessage(data.session?'계정 정보를 불러오고 있어요.':'가입 절차를 진행했습니다. 이메일의 확인 링크를 누른 뒤 로그인해주세요. 이미 가입했다면 로그인해주세요.');
+      }else{
+        const {error}=await backend.auth.signInWithPassword({email:email.trim(),password});
+        if(error)throw error;
+        setSuccessMessage('계정 정보를 불러오고 있어요.');
+      }
+    }catch(error){setErrorMessage(error instanceof Error?error.message:'계정 연결에 실패했습니다.');}
+    finally{setBusy(false);}
   };
 
   return (
@@ -238,22 +168,12 @@ export const AuthModal: React.FC = () => {
             </div>
           )}
 
-          {/* 1. Student ID (학번) Input */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-              <Lock className="w-3.5 h-3.5 text-emerald-600" />
-              {isSignup && memberType === 'citizen' ? '아이디' : '학번 (Student ID)'}
-            </label>
-            <input
-              type="text"
-              required
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-              placeholder={isSignup && memberType === 'citizen' ? '로그인에 사용할 아이디' : '예: 2024101234'}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
-            />
-          </div>
-
+          <label className="block text-xs font-bold text-slate-700">이메일
+            <input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="이메일 주소" className="mt-1 w-full rounded-xl border bg-slate-50 p-3 text-sm" />
+          </label>
+          {isSignup && memberType==='student' && <label className="block text-xs font-bold text-slate-700">학번 (본인에게만 표시)
+            <input required maxLength={40} value={studentId} onChange={e=>setStudentId(e.target.value)} className="mt-1 w-full rounded-xl border bg-slate-50 p-3 text-sm" />
+          </label>}
           {/* 2. Password (비밀번호) Input */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
@@ -265,7 +185,7 @@ export const AuthModal: React.FC = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호를 입력하세요"
+              minLength={isSignup ? 8 : undefined} autoComplete={isSignup ? "new-password" : "current-password"} placeholder="비밀번호 (가입 시 8자 이상)"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
             />
           </div>
@@ -421,36 +341,24 @@ export const AuthModal: React.FC = () => {
                 </div>
                 <div className="flex items-end text-[10px] leading-relaxed text-slate-400">학교·단과대학·학과 목록에 없으면 직접 입력할 수 있어요.</div>
               </div>}
-              {memberType === 'citizen' && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-[10px] leading-relaxed text-emerald-800">진주시민 랭킹에 참여하는 데모 계정입니다. 현재 화면에서는 별도의 거주 인증을 진행하지 않습니다.</p>}
+              {memberType === 'citizen' && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-[10px] leading-relaxed text-emerald-800">진주시민으로 가입합니다. 별도의 거주 인증은 진행하지 않습니다.</p>}
             </>
-          )}
-
-          {/* Quick Demo button for Login */}
-          {!isSignup && (
-            <button
-              type="button"
-              onClick={handleQuickDemoFill}
-              className="w-full py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-200 transition-colors flex items-center justify-center gap-1 cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>테스트용 데모 계정 자동 입력 (학번: 20230101 / 암호: 1234)</span>
-            </button>
           )}
 
           <div className="pt-2">
             <button
-              type="submit"
+              type="submit" disabled={busy}
               className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all active:scale-95 cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{isSignup ? 'Supabase DB 회원가입 및 시작하기' : '학번 로그인'}</span>
+              <span>{busy ? '연결 중...' : isSignup ? '회원가입' : '이메일 로그인'}</span>
             </button>
           </div>
 
           <p className="text-[11px] text-center text-slate-400 font-light">
             {isSignup
-              ? '회원가입 시 Supabase 데이터베이스 사용자 테이블에 정보가 영구 등록됩니다.'
-              : '등록한 학번과 직접 설정한 비밀번호로 로그인할 수 있습니다.'}
+              ? '닉네임·학교·활동 합계는 랭킹에 표시됩니다. 상세 활동은 별도로 공개할 수 있어요.'
+              : '등록한 이메일과 비밀번호로 로그인할 수 있습니다.'}
           </p>
         </form>
       </div>

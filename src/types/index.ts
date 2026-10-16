@@ -1,6 +1,7 @@
 export type ChallengeCategory = 'all' | 'transport' | 'life' | 'food' | 'resource';
 
 export interface User {
+  shareActivity?: boolean;
   id: string;
   studentId?: string;
   memberType?: 'student' | 'citizen';
@@ -129,6 +130,7 @@ export interface Participation {
   verificationImage?: string;
   aiVerificationScore?: number;
   carbonSaved: number;
+  carbonEstimate?: import('../lib/carbonEstimate').CarbonEstimate;
   pointsEarned: number;
 }
 

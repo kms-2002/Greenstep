@@ -1,79 +1,18 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { Avatar } from '../../common/Avatar';
 import { Award, Building2, Flame, Trophy, Users } from 'lucide-react';
 import { JINJU_UNIVERSITY_NAMES } from '../../../data/jinjuUniversityCatalog';
 
 type RankCategory = 'overall' | 'students' | 'citizens' | 'friends';
-type RankingMember = {
-  id: string;
-  nickname: string;
-  university: string;
-  college?: string;
-  department: string;
-  carbonReduction: number;
-  points: number;
-  streak: number;
-  avatarId?: string;
-  isCurrentUser?: boolean;
-};
-
-const SAMPLE_CITIZENS: RankingMember[] = [
-  { id: 'citizen-1', nickname: '남강산책러', university: '진주시민', department: '시민', carbonReduction: 39.6, points: 1080, streak: 12, avatarId: 'avatar-tree' },
-  { id: 'citizen-2', nickname: '초록진주', university: '진주시민', department: '시민', carbonReduction: 32.4, points: 920, streak: 8, avatarId: 'avatar-sprout' },
-  { id: 'citizen-3', nickname: '텀블러진주', university: '진주시민', department: '시민', carbonReduction: 21.8, points: 640, streak: 5, avatarId: 'avatar-tumbler' },
-];
-
-const SAMPLE_FRIENDS: RankingMember[] = [
-  { id: 'friend-1', nickname: '박지구', university: '경상국립대학교', department: '경영학부', carbonReduction: 38.2, points: 1120, streak: 8, avatarId: 'avatar-sprout' },
-  { id: 'friend-2', nickname: '최에코', university: '경상국립대학교', department: '회계세무학부', carbonReduction: 31.4, points: 890, streak: 6, avatarId: 'avatar-rider' },
-  { id: 'friend-3', nickname: '정클린', university: '진주교육대학교', department: '초등교육과', carbonReduction: 29.1, points: 810, streak: 4, avatarId: 'avatar-tree' },
-];
-
-const sortByCarbon = (members: RankingMember[]) => [...members].sort((a, b) => b.carbonReduction - a.carbonReduction);
-
 export const RankingTab: React.FC = () => {
-  const { user, personalRanks } = useApp();
+  const { user, members, refreshMembers } = useApp();
   const [activeRankTab, setActiveRankTab] = useState<RankCategory>('overall');
   const [selectedUniversity, setSelectedUniversity] = useState(user.memberType === 'citizen' ? JINJU_UNIVERSITY_NAMES[0] : user.university || JINJU_UNIVERSITY_NAMES[0]);
 
-  const currentUser: RankingMember = {
-    id: user.id,
-    nickname: user.nickname,
-    university: user.memberType === 'citizen' ? '진주시민' : user.university,
-    college: user.college,
-    department: user.memberType === 'citizen' ? '시민' : user.department,
-    carbonReduction: user.totalCarbonReduction,
-    points: user.points,
-    streak: user.consecutiveDays,
-    avatarId: user.profileAvatarId,
-    isCurrentUser: true,
-  };
-
-  const studentMembers = useMemo(() => {
-    const samples = personalRanks.filter((rank) => !rank.isCurrentUser).map((rank) => ({
-      id: rank.userId,
-      nickname: rank.nickname,
-      university: rank.university,
-      department: rank.department,
-      carbonReduction: rank.carbonReduction,
-      points: rank.points,
-      streak: 0,
-      avatarId: rank.avatarUrl,
-    }));
-    const members = user.memberType === 'citizen' ? samples : [...samples, currentUser];
-    return sortByCarbon(members).map((member, index) => ({ ...member, rank: index + 1 }));
-  }, [personalRanks, user.memberType, user.id, user.nickname, user.university, user.department, user.college, user.points, user.totalCarbonReduction, user.consecutiveDays, user.profileAvatarId]);
-
-  const citizenMembers = useMemo(() => {
-    const members = user.memberType === 'citizen' ? [...SAMPLE_CITIZENS, currentUser] : SAMPLE_CITIZENS;
-    return sortByCarbon(members).map((member, index) => ({ ...member, rank: index + 1 }));
-  }, [user.memberType, user.id, user.nickname, user.points, user.totalCarbonReduction, user.consecutiveDays, user.profileAvatarId]);
-
-  const friendMembers = useMemo(() => sortByCarbon([currentUser, ...SAMPLE_FRIENDS]).map((member, index) => ({ ...member, rank: index + 1 })), [user.id, user.nickname, user.university, user.department, user.college, user.points, user.totalCarbonReduction, user.consecutiveDays, user.profileAvatarId]);
-
-  const overallMembers = useMemo(() => sortByCarbon([...studentMembers, ...citizenMembers.filter((member) => !member.isCurrentUser)]).map((member, index) => ({ ...member, rank: index + 1 })), [studentMembers, citizenMembers]);
-  const visibleMembers = activeRankTab === 'overall' ? overallMembers : activeRankTab === 'students' ? studentMembers.filter((member) => member.university === selectedUniversity) : activeRankTab === 'citizens' ? citizenMembers : friendMembers;
+  const visibleMembers=members.filter(m=>activeRankTab==='overall' || (activeRankTab==='students' && m.memberType==='student' && m.university===selectedUniversity) || (activeRankTab==='citizens' && m.memberType==='citizen') || (activeRankTab==='friends' && (m.isFriend || m.id===user.id)))
+    .sort((a,b)=>b.carbonReduction-a.carbonReduction || b.points-a.points || a.id.localeCompare(b.id))
+    .map((m,index)=>({...m,rank:index+1,isCurrentUser:m.id===user.id,avatarId:m.profileAvatarId,streak:0}));
   const myRank = visibleMembers.find((member) => member.isCurrentUser);
   const isSchoolFilter = activeRankTab === 'students';
 
@@ -112,7 +51,8 @@ export const RankingTab: React.FC = () => {
         ))}
         {visibleMembers.length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center text-xs leading-relaxed text-slate-500">이 학교의 랭킹 데이터가 아직 없어요.<br />학생들이 참여하면 여기에 순위가 표시돼요.</div>}
       </div>
-      <p className="px-1 text-[10px] leading-relaxed text-slate-400">현재는 화면 확인용 시범 랭킹 데이터예요. 실제 사용자 간 통합 랭킹은 공용 서버 연동 후 제공할 수 있어요.</p>
+      <button onClick={()=>{void refreshMembers();}} className="text-xs text-emerald-700">랭킹 새로고침</button>
+      <p className="px-1 text-[10px] leading-relaxed text-slate-400">가입된 계정의 감축 추정량 순위입니다. 같은 감축량이면 포인트, 계정 ID 순으로 정렬합니다.</p>
     </div>
   );
 };

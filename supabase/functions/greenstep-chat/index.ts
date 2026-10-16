@@ -1,4 +1,5 @@
 import { quizInstruction, quizSchema, parseQuiz } from './quiz.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +24,21 @@ Deno.serve(async (request) => {
   try {
     const body = await request.json();
     const isQuiz = body.mode === 'quiz';
+    let quizUser: string | null = null;
+    const day = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    const admin = isQuiz ? createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {auth:{persistSession:false,autoRefreshToken:false}}) : null;
+    if (admin) {
+      const token = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+      const {data:{user},error} = await admin.auth.getUser(token);
+      if(error || !user) return jsonResponse({error:'퀴즈를 풀려면 로그인해주세요.'},401);
+      quizUser=user.id;
+      const saved=await admin.from('gs_quizzes').select('question').eq('user_id',user.id).eq('day',day).maybeSingle();
+      if(saved.error) return jsonResponse({error:'퀴즈 데이터베이스 연결을 확인해주세요.'},503);
+      if(saved.data) {
+        const {answerIndex,explanation,...question}=saved.data.question;
+        return jsonResponse({quiz:question});
+      }
+    }
     const message = isQuiz ? '최근 실천과 관련된 새로운 환경 문제를 만들어 주세요.' : typeof body.message === 'string' ? body.message.trim().slice(0, 1000) : '';
     if (!message) return jsonResponse({ error: '질문 내용을 입력해 주세요.' }, 400);
 
@@ -101,7 +117,15 @@ Deno.serve(async (request) => {
       .trim();
     if (!reply) return jsonResponse({ error: 'Gemini가 답변을 반환하지 않았습니다.' }, 502);
     if (isQuiz) {
-      try { return jsonResponse({ quiz: parseQuiz(JSON.parse(reply), context.availableChallenges) }); }
+      try {
+        const question=parseQuiz(JSON.parse(reply), context.availableChallenges);
+        const saved=await admin!.from('gs_quizzes').upsert({user_id:quizUser,day,question},{onConflict:'user_id,day',ignoreDuplicates:true});
+        if(saved.error) return jsonResponse({error:'문제를 저장하지 못했습니다.'},503);
+        const canonical=await admin!.from('gs_quizzes').select('question').eq('user_id',quizUser).eq('day',day).single();
+        if(canonical.error) return jsonResponse({error:'저장된 문제를 읽지 못했습니다.'},503);
+        const {answerIndex,explanation,...publicQuestion}=canonical.data.question;
+        return jsonResponse({quiz:publicQuestion});
+      }
       catch { return jsonResponse({ error: '생성된 퀴즈 형식이 올바르지 않습니다. 다시 생성해 주세요.' }, 502); }
     }
     return jsonResponse({ reply });
