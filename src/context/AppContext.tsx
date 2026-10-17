@@ -1,3 +1,4 @@
+import { verificationRequest } from '../lib/challengeVerification';
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import type {
   Badge,
@@ -66,7 +67,7 @@ interface AppContextType {
   logout: () => void;
   updateProfile: (updated: Partial<User>) => void;
   joinChallenge: (challengeId: string) => void;
-  completeCertification: (challengeId: string, imageSrc?: string, measurement?: WasteMeasurement) => Promise<void>;
+  completeCertification: (challengeId: string, imageSrc?: string, measurement?: WasteMeasurement, ticket?: string) => Promise<void>;
 
   // Admin Actions
   addAdminChallenge: (newCh: Omit<Challenge, 'id' | 'participantsCount' | 'active'>) => void;
@@ -161,21 +162,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const completing=useRef(false);
   const pendingCompletion=useRef<{key:string;id:string;path?:string}|null>(null);
-  const completeCertification=async(challengeId:string,imageSrc?:string,measurement?:WasteMeasurement)=>{
+  const completeCertification=async(challengeId:string,imageSrc?:string,measurement?:WasteMeasurement,ticket?:string)=>{
     if(completing.current)throw new Error('저장 중입니다. 잠시 기다려주세요.');
     if(!accountId.current || !imageSrc)throw new Error('로그인과 인증 사진이 필요합니다.');
     completing.current=true;
     const id=accountId.current;
     try{
-      const key=id+':'+challengeId;
+      if(!ticket)throw new Error('카메라를 열고 새로 촬영해주세요.');
+      const key=id+':'+ticket;
       let pending=pendingCompletion.current;
-      if(!pending || pending.key!==key){pending={key,id:await rpc<string>('gs_join',{p_challenge:challengeId})};pendingCompletion.current=pending;}
-      if(!pending.path){
-        const blob=await (await fetch(imageSrc)).blob();
-        if(blob.size>5*1024*1024)throw new Error('사진은 5MB 이하로 올려주세요.');
-        const path=`${id}/${pending.id}/${crypto.randomUUID()}`;
-        const {error}=await backend.storage.from('greenstep-evidence').upload(path,blob,{contentType:blob.type});
-        if(error)throw error;pending.path=path;
+      if(!pending || pending.key!==key){
+        const verified=await verificationRequest({mode:'verify',ticket,image:imageSrc});
+        pending={key,id:verified.participationId,path:verified.path};pendingCompletion.current=pending;
       }
       const result=await rpc('gs_complete',{p_id:pending.id,p_image:pending.path,p_baseline:measurement?.baselineGrams??null,p_actual:measurement?.actualGrams??null});
       if(accountId.current!==id)return;

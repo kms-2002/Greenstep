@@ -17,7 +17,7 @@ export function requestQuiz(key: string, context: object): Promise<DailyQuiz> {
     const keyValue = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_8ackbhnMEYvM7He_JNJOsA_jqPjJGln';
     const {data:{session}}=await backend.auth.getSession();
     if(!session)throw new Error('로그인 후 퀴즈에 참여해주세요.');
-    const response = await fetch(`${url}/functions/v1/greenstep-chat`, {
+    const response = await fetch(`${url}/functions/v1/greenstep-ai`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', apikey: keyValue, Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ ...context, mode: 'quiz' }), signal: AbortSignal.timeout(75000),
     });
