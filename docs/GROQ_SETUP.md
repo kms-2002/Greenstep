@@ -2,7 +2,7 @@
 
 ## 상태 (2026-10-17)
 
-로컬 코드 구현과 프런트엔드 빌드 완료. 새 SQL migration 및 `greenstep-ai` 함수는 아직 원격에 배포하지 않았으며 Groq 키를 이용한 실호출·기기 카메라 동작은 검증하지 않았습니다. 기존 `greenstep-chat`의 Gemini 챗봇은 유지합니다.
+프런트엔드 빌드 완료. 2026-10-17 Supabase 프로젝트 `dfgdtvgpnsyjhnsttibs`에 `greenstep-ai` 함수를 배포하고 사진 인증 SQL migration을 적용했습니다. 함수 내부에서 Auth 사용자를 검증합니다. 해당 migration을 다시 실행하지 마세요. Groq 키를 이용한 실호출·기기 카메라 동작은 아직 검증하지 않았습니다. 기존 `greenstep-chat`의 Gemini 챗봇은 유지합니다.
 
 ## 키 입력 위치
 
