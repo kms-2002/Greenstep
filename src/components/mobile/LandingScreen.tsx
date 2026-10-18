@@ -1,4 +1,5 @@
 import React from 'react';
+import { GoogleLoginButton } from './GoogleLoginButton';
 import { useApp } from '../../context/AppContext';
 import { ArrowRight, Leaf, Trophy, TreePine, Zap, RotateCcw } from 'lucide-react';
 
@@ -98,6 +99,7 @@ export const LandingScreen: React.FC = () => {
 
       {/* 4. ALIO Style Hero Button Bar */}
       <div className="relative z-30 pt-1 space-y-2">
+        <GoogleLoginButton />
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => openAuthModal('login')}

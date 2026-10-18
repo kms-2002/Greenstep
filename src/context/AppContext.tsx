@@ -30,6 +30,7 @@ interface CompletionResult {
 interface AppContextType {
   user: User;
   isAuthenticated: boolean;
+  needsProfile: boolean;
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   viewMode: ViewMode;
@@ -81,6 +82,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user,setUser]=useState<User>(emptyUser);
   const [isAuthenticated,setIsAuthenticated]=useState(false);
+  const [needsProfile,setNeedsProfile]=useState(false);
   const [loading,setLoading]=useState(true);
   const [syncError,setSyncError]=useState('');
   const accountId=useRef<string | null>(null);
@@ -106,13 +108,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const data=await loadAccount(id);
     if(accountId.current!==id)return;
     setUser(data.user);setParticipations(data.participations);setIsAuthenticated(true);setSyncError('');
+    setNeedsProfile(!data.profileComplete);
   },[]);
   useEffect(()=>{
     let active=true;
+    const authParams=new URLSearchParams(location.hash.slice(1));
+    if(authParams.has('error')){
+      setSyncError(authParams.get('error')==='access_denied'
+        ? '로그인이 취소되었거나 인증 링크가 만료되었습니다. 다시 로그인해주세요.'
+        : '로그인을 완료하지 못했습니다. 다시 시도해주세요.');
+      history.replaceState(null,'',location.pathname+location.search);
+    }
     const {data:{subscription}}=backend.auth.onAuthStateChange((_event,session)=>{
       const next=session?.user.id??null;
       if(next!==accountId.current){
-        accountId.current=next;setUser(emptyUser);setParticipations([]);setMembers([]);setIsAuthenticated(false);
+        accountId.current=next;setUser(emptyUser);setParticipations([]);setMembers([]);setIsAuthenticated(false);setNeedsProfile(false);
         setSelectedChallenge(null);setChallengeToVerify(null);setIsVerificationOpen(false);setIsSuccessModalOpen(false);
       }
       if(!next){setLoading(false);return;}
@@ -209,6 +219,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         user,
         isAuthenticated,
+        needsProfile,
         activeTab,
         setActiveTab,
         viewMode,
