@@ -24,7 +24,7 @@ const getLocalTime = () =>
     .trim();
 
 const MainContent: React.FC = () => {
-  const { isAuthenticated, activeTab, loading } = useApp();
+  const { isAuthenticated, activeTab, loading, needsProfile } = useApp();
   const [currentTime, setCurrentTime] = useState(getLocalTime);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ const MainContent: React.FC = () => {
 
                 {/* App Main Screen View */}
                 <div className="app-screen flex-1 flex flex-col relative overflow-hidden bg-slate-50">
-                  {loading ? <div role="status" className="m-auto text-sm text-emerald-700">계정 정보를 불러오는 중...</div> : !isAuthenticated ? (
+                  {loading ? <div role="status" className="m-auto text-sm text-emerald-700">계정 정보를 불러오는 중...</div> : !isAuthenticated || needsProfile ? (
                     <LandingScreen />
                   ) : (
                     <>

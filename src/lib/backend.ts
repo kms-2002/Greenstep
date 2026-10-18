@@ -60,5 +60,9 @@ export async function loadAccount(id: string) {
     totalCarbonReduction:total,todayCarbonReduction:completed.filter(p=>koreanDay(new Date(p.completedAt!))===today).reduce((s,p)=>s+p.carbonSaved,0),
     weekCarbonReduction:completed.filter(p=>new Date(p.completedAt!)>=new Date(koreanDay(start)+'T00:00:00+09:00')).reduce((s,p)=>s+p.carbonSaved,0),
     level:calculateTreeInfo(total).level,consecutiveDays,lastActiveDate:[...days].sort().at(-1)??''};
-  return {user,participations};
+  // Google supplies identity, but school/member details are collected in our form.
+  // Use persisted profile fields so an interrupted signup resumes after reload.
+  const profileComplete=!!p.nickname?.trim() && (p.member_type==='citizen' ||
+    !!(p.university?.trim() && p.college?.trim() && p.department?.trim() && p.student_id?.trim()));
+  return {user,participations,profileComplete};
 }
