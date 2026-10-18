@@ -43,7 +43,13 @@ Site URL 및 Redirect URLs에 `https://greenstep-iota.vercel.app/`를 등록합�
 
 ## 상태
 
-앱 코드의 프로덕션 빌드는 통과했습니다. Google OAuth 자격 증명이 아직 없으므로 실제 Google 로그인은 미확인입니다.
-코드를 배포하고 Google 제공자를 구성한 후 실제 Google 계정으로 로그인 및 프로필 저장을 확인해야 합니다.
+2026-10-18 기준:
+
+- Google 로그인 및 프로필 입력 코드가 PR #3으로 main에 병합되었고 Vercel 운영 배포가 완료되었습니다.
+- Supabase에 사용자가 Google OAuth 자격 증명을 등록했고, Google 제공자를 활성화했습니다.
+- Confirm email은 꺼져 있으며, Site URL과 Redirect URLs는 `https://greenstep-iota.vercel.app/`로 설정했습니다.
+- 배포 앱에서 Google 계정 선택 화면으로 정상 이동하는 것을 확인했습니다.
+- 계정 선택 이후 로그인 완료 및 프로필 저장까지의 실제 사용자 확인은 아직 남아 있습니다.
+- OAuth Secret은 Supabase에만 저장하며 저장소에는 포함하지 않습니다. 대시보드 설정은 GitHub 코드와 별도로 관리됩니다.
 
 공식 안내: https://supabase.com/docs/guides/auth/social-login/auth-google
