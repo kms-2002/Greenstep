@@ -1,3 +1,4 @@
+import { NotificationModal } from './components/mobile/NotificationModal';
 import { AttendanceModal } from './components/mobile/AttendanceModal';
 import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
@@ -120,6 +121,7 @@ const MainContent: React.FC = () => {
                 {/* Global Modals */}
                 <AuthModal />
                 <AttendanceModal />
+                <NotificationModal />
                 <VerificationModal />
                 <SuccessModal />
                 <ChallengeDetailModal />

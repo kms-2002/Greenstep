@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const MyPageTab: React.FC = () => {
-  const { user, badges, logout, updateProfile, refreshAccount, refreshMembers, attendance, setIsAttendanceOpen } = useApp();
+  const { user, badges, logout, updateProfile, refreshAccount, refreshMembers, attendance, setIsAttendanceOpen, setIsNotificationOpen, inbox } = useApp();
   const [editing,setEditing]=useState(false);
   const [draft,setDraft]=useState(user);
   const [profileError,setProfileError]=useState('');
@@ -163,15 +163,15 @@ export const MyPageTab: React.FC = () => {
         </button>
 
         <button
-          onClick={() => alert('매일 오전 9시 챌린지 리마인더 알림이 활성화되어 있습니다.')}
+          onClick={() => setIsNotificationOpen(true)}
           className="w-full p-3.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors"
         >
           <div className="flex items-center space-x-3">
             <Bell className="w-4 h-4 text-slate-500" />
-            <span>알림 설정</span>
+            <span>활동 알림함</span>
           </div>
           <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-            ON
+            {inbox.unread>0?`${inbox.unread}개`:'새 알림 없음'}
           </span>
         </button>
 
