@@ -1,3 +1,4 @@
+import { AttendanceModal } from './components/mobile/AttendanceModal';
 import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/mobile/Header';
@@ -118,6 +119,7 @@ const MainContent: React.FC = () => {
 
                 {/* Global Modals */}
                 <AuthModal />
+                <AttendanceModal />
                 <VerificationModal />
                 <SuccessModal />
                 <ChallengeDetailModal />
@@ -127,10 +129,7 @@ const MainContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Desktop Note Footer (ALIO Style) */}
-      <p className="hidden sm:block text-xs font-semibold text-slate-400 mt-4 tracking-tight">
-        ALIO · GreenStep 모바일 프로토타입 · 화면을 직접 눌러보세요
-      </p>
+
     </div>
   );
 };

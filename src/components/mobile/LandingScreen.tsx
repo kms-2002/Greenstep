@@ -24,7 +24,7 @@ export const LandingScreen: React.FC = () => {
           </div>
           <div>
             <span className="text-[11px] font-extrabold tracking-widest text-slate-400 uppercase block font-mono">
-              GNU · GREENSTEP ECO APP
+              GREENSTEP ECO APP
             </span>
           </div>
         </div>

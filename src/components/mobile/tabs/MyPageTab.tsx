@@ -20,16 +20,20 @@ import {
 } from 'lucide-react';
 
 export const MyPageTab: React.FC = () => {
-  const { user, badges, logout, updateProfile, refreshAccount, refreshMembers } = useApp();
+  const { user, badges, logout, updateProfile, refreshAccount, refreshMembers, attendance, setIsAttendanceOpen } = useApp();
   const [editing,setEditing]=useState(false);
   const [draft,setDraft]=useState(user);
   const [profileError,setProfileError]=useState('');
   const [saving,setSaving]=useState(false);
   const [profileMessage,setProfileMessage]=useState('');
+  const [badgeFilter,setBadgeFilter]=useState<'all'|'earned'|'locked'>('all');
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const unlockedCount = badges.filter((b) => b.unlockedAt).length;
+
+  const visibleBadges=badges.filter(b=>badgeFilter==='all'||(badgeFilter==='earned'?!!b.unlockedAt:!b.unlockedAt));
+  const nextBadge=badges.filter(b=>!b.unlockedAt).sort((a,b)=>(b.progress/b.requirementValue)-(a.progress/a.requirementValue))[0];
 
   return (
     <div className="p-4 space-y-4 pb-24 animate-fadeIn">
@@ -78,6 +82,10 @@ export const MyPageTab: React.FC = () => {
         </div>
       </div>
 
+      <button onClick={()=>setIsAttendanceOpen(true)} className="w-full flex justify-between items-center rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-left">
+        <span><span className="text-sm font-extrabold text-emerald-900">📅 매일 출석 체크</span><span className="block text-xs text-emerald-700 mt-1">누적 {attendance.days.length}일 · 출석 배지를 모아보세요</span></span>
+        <span className="text-xs font-bold text-emerald-700">{attendance.days.includes(attendance.today)?'완료 ✓':'출석하기 →'}</span>
+      </button>
       {/* Badges Overview Grid Section */}
       <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
@@ -96,7 +104,7 @@ export const MyPageTab: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-5 gap-2">
-          {badges.map((b) => (
+          {[...badges].sort((a,b)=>Number(!!b.unlockedAt)-Number(!!a.unlockedAt)).slice(0,10).map((b) => (
             <div
               key={b.id}
               onClick={() => setShowBadgeModal(true)}
@@ -116,6 +124,11 @@ export const MyPageTab: React.FC = () => {
         </div>
       </div>
 
+      {nextBadge && <button onClick={()=>setShowBadgeModal(true)} className="w-full rounded-2xl bg-amber-50 border border-amber-100 p-4 text-left">
+        <span className="text-xs text-amber-800 font-bold">다음으로 도전할 배지</span>
+        <span className="block font-bold text-sm mt-1">{nextBadge.icon} {nextBadge.name} <span className="text-xs font-normal">{nextBadge.progress}/{nextBadge.requirementValue}</span></span>
+        <span className="block text-xs text-slate-600 mt-1">{nextBadge.description}</span>
+      </button>}
       <FriendsPanel user={user} />
 
       {editing && <form className="rounded-2xl border bg-white p-4 space-y-3" onSubmit={async e=>{e.preventDefault();if(saving)return;setSaving(true);setProfileError('');try{await rpc('gs_update_profile',{p:draft});await refreshAccount();await refreshMembers();setEditing(false);}catch(error){setProfileError((error as Error).message);}finally{setSaving(false);}}}>
@@ -214,14 +227,20 @@ export const MyPageTab: React.FC = () => {
               </button>
             </div>
 
+            <div className="rounded-2xl bg-emerald-50 p-3">
+              <p className="text-xs font-bold text-emerald-900">나의 초록 발자취 · {Math.round(unlockedCount/badges.length*100)}% 수집</p>
+              <div className="h-2 mt-2 rounded-full bg-emerald-100 overflow-hidden"><div className="h-full bg-emerald-500" style={{width:`${unlockedCount/badges.length*100}%`}}/></div>
+            </div>
+            <div className="flex gap-2">{(['all','earned','locked'] as const).map((filter,i)=><button key={filter} aria-pressed={badgeFilter===filter} onClick={()=>setBadgeFilter(filter)} className={`flex-1 rounded-full py-2 text-xs font-bold ${badgeFilter===filter?'bg-emerald-700 text-white':'bg-slate-100 text-slate-600'}`}>{['전체','획득','도전 중'][i]}</button>)}</div>
+            {visibleBadges.length===0&&<p className="text-sm text-center text-slate-500 py-6">첫 출석으로 첫 번째 배지를 획득해보세요!</p>}
             <div className="space-y-3">
-              {badges.map((b) => (
+              {visibleBadges.map((b) => (
                 <div
                   key={b.id}
                   className={`p-3.5 rounded-2xl border flex items-center space-x-3 ${
                     b.unlockedAt
                       ? 'bg-emerald-50/80 border-emerald-200'
-                      : 'bg-slate-50 border-slate-200 opacity-50'
+                      : 'bg-slate-50 border-slate-200'
                   }`}
                 >
                   <span className="text-3xl shrink-0">{b.icon}</span>
@@ -235,6 +254,8 @@ export const MyPageTab: React.FC = () => {
                       )}
                     </div>
                     <p className="text-[11px] text-slate-500 mt-0.5">{b.description}</p>
+                    {!b.unlockedAt&&<><div className="mt-2 flex justify-between text-[10px] text-slate-500"><span>도전 중</span><span>{Number(b.progress.toFixed(1))} / {b.requirementValue}</span></div><div role="progressbar" aria-label={b.name} aria-valuenow={b.progress} aria-valuemin={0} aria-valuemax={b.requirementValue} className="mt-1 h-1.5 rounded-full bg-slate-200 overflow-hidden"><div className="h-full bg-emerald-500" style={{width:`${b.progress/b.requirementValue*100}%`}}/></div></>}
+
                   </div>
                 </div>
               ))}

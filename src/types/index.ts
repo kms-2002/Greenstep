@@ -162,7 +162,7 @@ export interface Badge {
   description: string;
   icon: string;
   category: 'starter' | 'streak' | 'carbon' | 'category' | 'master';
-  requirementType: 'count' | 'streak' | 'carbon' | 'specific_challenge';
+  requirementType: 'count' | 'streak' | 'carbon' | 'specific_challenge' | 'attendance';
   requirementValue: number;
   targetCategory?: ChallengeCategory;
   unlockedAt?: string;

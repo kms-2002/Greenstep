@@ -24,7 +24,7 @@ import {
 import { getChallengeRewardPoints } from '../../../lib/challengeRewards';
 
 export const HomeTab: React.FC = () => {
-  const { user, challenges, participations, setActiveTab } = useApp();
+  const { user, challenges, participations, setActiveTab, setIsAttendanceOpen, attendance } = useApp();
   const measuredEstimateTotal = participations
     .filter(p => p.userId === user.id && p.status === 'completed' && p.carbonEstimate?.status === 'estimated')
     .reduce((sum, p) => sum + (p.carbonEstimate?.estimatedKgCO2e ?? 0), 0);
@@ -89,6 +89,10 @@ export const HomeTab: React.FC = () => {
 
   return (
     <div className="p-4 space-y-4 pb-24 animate-fadeIn select-none">
+      <button onClick={()=>setIsAttendanceOpen(true)} className="w-full flex items-center justify-between rounded-2xl bg-emerald-50 border border-emerald-200 p-3 text-left">
+        <span className="flex items-center gap-2 text-sm font-bold text-emerald-900"><CalendarCheck2 size={18}/>오늘의 출석 체크</span>
+        <span className="text-xs font-bold text-emerald-700">{attendance.days.includes(attendance.today)?'출석 완료 ✓':'도장 찍기 →'}</span>
+      </button>
 
       {/* 1. User Greeting & Live Counter Pill */}
       <div className="space-y-1 pt-1">

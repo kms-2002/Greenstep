@@ -1,3 +1,4 @@
+import { badgeProgress, type BadgeProgress } from '../lib/badges';
 import { verificationRequest } from '../lib/challengeVerification';
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import type {
@@ -9,7 +10,7 @@ import type {
   PersonalRank,
   User,
 } from '../types';
-import { INITIAL_BADGES, INITIAL_CHALLENGES } from '../mock/initialData';
+import { INITIAL_CHALLENGES } from '../mock/initialData';
 import { INITIAL_CARBON_FACTORS } from '../utils/carbonCalculator';
 import type { CarbonEstimate, WasteMeasurement } from '../lib/carbonEstimate';
 import { backend, emptyUser, loadAccount, rpc, type Member } from '../lib/backend';
@@ -38,7 +39,13 @@ interface AppContextType {
 
   challenges: Challenge[];
   participations: Participation[];
-  badges: Badge[];
+  badges: BadgeProgress[];
+  attendance: {today:string;days:string[]};
+  attendanceError: string;
+  refreshAttendance: () => Promise<void>;
+  checkIn: () => Promise<void>;
+  isAttendanceOpen: boolean;
+  setIsAttendanceOpen: (open:boolean) => void;
   personalRanks: PersonalRank[];
   departmentRanks: DepartmentRank[];
   carbonFactors: CarbonFactor[];
@@ -91,11 +98,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [challenges,setChallenges]=useState<Challenge[]>(INITIAL_CHALLENGES);
   const [participations,setParticipations]=useState<Participation[]>([]);
   const [members,setMembers]=useState<Member[]>([]);
-  const badges: Badge[]=INITIAL_BADGES.map(b=>{
-    const completed=participations.filter(p=>p.status==='completed');
-    const reached=b.requirementType==='count'?completed.length>=b.requirementValue:b.requirementType==='streak'?user.consecutiveDays>=b.requirementValue:b.requirementType==='carbon'?user.totalCarbonReduction>=b.requirementValue:false;
-    return {...b,unlockedAt:reached?user.lastActiveDate:undefined};
-  });
+  const [attendance,setAttendance]=useState<{today:string;days:string[]}>({today:'',days:[]});
+  const [attendanceError,setAttendanceError]=useState('');
+  const [isAttendanceOpen,setIsAttendanceOpen]=useState(false);
+  const refreshAttendance=useCallback(async()=>{
+    const id=accountId.current;if(!id)return;
+    try{
+      const data=await rpc<{today:string;days:string[]}>('gs_attendance_status');
+      if(accountId.current===id){setAttendance(data);setAttendanceError('');}
+    }catch{if(accountId.current===id)setAttendanceError('출석 기록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');}
+  },[]);
+  const checkIn=async()=>{
+    const id=accountId.current;if(!id)throw new Error('로그인이 필요합니다.');
+    const data=await rpc<{today:string;days:string[]}>('gs_check_in');
+    if(accountId.current===id){setAttendance(data);setAttendanceError('');}
+  };
+  const badges=badgeProgress(participations,challenges,attendance.days);
   const personalRanks: PersonalRank[]=members.map((m,i)=>({rank:i+1,userId:m.id,nickname:m.nickname,university:m.university,department:m.department,carbonReduction:m.carbonReduction,points:m.points,isCurrentUser:m.id===user.id}));
   const departmentRanks: DepartmentRank[]=[];
   const carbonFactors=INITIAL_CARBON_FACTORS;
@@ -122,7 +140,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const {data:{subscription}}=backend.auth.onAuthStateChange((_event,session)=>{
       const next=session?.user.id??null;
       if(next!==accountId.current){
-        accountId.current=next;setUser(emptyUser);setParticipations([]);setMembers([]);setIsAuthenticated(false);setNeedsProfile(false);
+        accountId.current=next;setUser(emptyUser);setParticipations([]);setMembers([]);setIsAuthenticated(false);setNeedsProfile(false);setAttendance({today:'',days:[]});setAttendanceError('');setIsAttendanceOpen(false);
         setSelectedChallenge(null);setChallengeToVerify(null);setIsVerificationOpen(false);setIsSuccessModalOpen(false);
       }
       if(!next){setLoading(false);return;}
@@ -130,7 +148,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Schedule outside the Auth callback to avoid holding the session lock.
       setTimeout(()=>{
         if(!active || accountId.current!==next)return;
-        Promise.all([refreshAccount(),refreshMembers()]).then(()=>{
+        Promise.all([refreshAccount(),refreshMembers(),refreshAttendance()]).then(()=>{
           if(active && accountId.current===next){setIsAuthModalOpen(false);if(sessionStorage.getItem('greenstep_pending_invite'))setActiveTab('my');}
         }).catch(e=>{if(active && accountId.current===next)setSyncError(e.message);})
           .finally(()=>{if(active && accountId.current===next)setLoading(false);});
@@ -141,11 +159,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sessionStorage.setItem('greenstep_pending_invite',invite);params.delete('invite');
       history.replaceState(null,'',location.pathname+(params.size?'?'+params.toString():'')+location.hash);
     }
-    const sync=()=>{if(accountId.current)Promise.all([refreshAccount(),refreshMembers()]).catch(e=>setSyncError(e.message));};
+    const sync=()=>{if(accountId.current)Promise.all([refreshAccount(),refreshMembers(),refreshAttendance()]).catch(e=>setSyncError(e.message));};
     window.addEventListener('focus',sync);
     const timer=window.setInterval(()=>{if(document.visibilityState==='visible')sync();},60000);
     return()=>{active=false;subscription.unsubscribe();window.removeEventListener('focus',sync);window.clearInterval(timer);};
-  },[refreshAccount,refreshMembers]);
+  },[refreshAccount,refreshMembers,refreshAttendance]);
 
   // Modals
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
@@ -227,6 +245,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         challenges,
         participations,
         badges,
+        attendance,attendanceError,refreshAttendance,checkIn,isAttendanceOpen,setIsAttendanceOpen,
         personalRanks,
         departmentRanks,
         carbonFactors,
