@@ -1,9 +1,9 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Bell, ChevronDown, Zap, RotateCcw } from 'lucide-react';
+import { Bell, Zap, RotateCcw } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { user, setActiveTab, logout } = useApp();
+  const { user, setActiveTab, logout, inbox, setIsNotificationOpen } = useApp();
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md px-3.5 py-2.5 border-b border-slate-100 shadow-xs">
@@ -15,10 +15,7 @@ export const Header: React.FC = () => {
             <span className="text-emerald-600 font-extrabold">step</span>
           </div>
 
-          <div className="inline-flex items-center space-x-1 bg-emerald-700 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold shadow-xs cursor-pointer hover:bg-emerald-800 transition-colors">
-            <span>GNU</span>
-            <ChevronDown className="w-3 h-3 stroke-[2.5]" />
-          </div>
+
         </div>
 
         {/* Right Actions: Image 1 Style [ ↻ 처음으로 ] Pill Button + Points + Menu */}
@@ -44,11 +41,12 @@ export const Header: React.FC = () => {
 
           {/* Bell Icon */}
           <button
-            onClick={() => alert('🔔 [알림] 진주시 남강 텀블러 인증 챌린지 포인트가 정상 적립되었습니다.')}
+            onClick={() => setIsNotificationOpen(true)}
+            aria-label={`알림${inbox.unread ? `, 읽지 않은 알림 ${inbox.unread}개` : ''}`}
             className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors relative cursor-pointer"
           >
             <Bell className="w-4.5 h-4.5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />
+            {inbox.unread>0&&<span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />}
           </button>
         </div>
       </div>

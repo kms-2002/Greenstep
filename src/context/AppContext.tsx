@@ -1,3 +1,4 @@
+import type { NotificationInbox } from '../lib/notifications';
 import { badgeProgress, type BadgeProgress } from '../lib/badges';
 import { verificationRequest } from '../lib/challengeVerification';
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
@@ -31,6 +32,12 @@ interface CompletionResult {
 interface AppContextType {
   user: User;
   isAuthenticated: boolean;
+  inbox: NotificationInbox;
+  notificationError: string;
+  refreshNotifications: () => Promise<void>;
+  readNotifications: (ids:string[]) => Promise<void>;
+  isNotificationOpen: boolean;
+  setIsNotificationOpen: (open:boolean) => void;
   needsProfile: boolean;
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
@@ -98,6 +105,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [challenges,setChallenges]=useState<Challenge[]>(INITIAL_CHALLENGES);
   const [participations,setParticipations]=useState<Participation[]>([]);
   const [members,setMembers]=useState<Member[]>([]);
+  const [inbox,setInbox]=useState<NotificationInbox>({items:[],unread:0});
+  const [notificationError,setNotificationError]=useState('');
+  const [isNotificationOpen,setIsNotificationOpen]=useState(false);
+  const notificationVersion=useRef(0);
+  const refreshNotifications=useCallback(async()=>{
+    const id=accountId.current;if(!id)return;
+    const version=++notificationVersion.current;
+    try{
+      const data=await rpc<NotificationInbox>('gs_notification_list');
+      if(accountId.current===id&&version===notificationVersion.current){setInbox(data);setNotificationError('');}
+    }catch{if(accountId.current===id&&version===notificationVersion.current)setNotificationError('알림을 불러오지 못했어요. 다시 시도해주세요.');}
+  },[]);
+  const readNotifications=async(ids:string[])=>{
+    if(!accountId.current||!ids.length)return;
+    const id=accountId.current;
+    ++notificationVersion.current;
+    await rpc('gs_notification_read',{p_ids:ids});
+    if(accountId.current===id)await refreshNotifications();
+  };
   const [attendance,setAttendance]=useState<{today:string;days:string[]}>({today:'',days:[]});
   const [attendanceError,setAttendanceError]=useState('');
   const [isAttendanceOpen,setIsAttendanceOpen]=useState(false);
@@ -111,7 +137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const checkIn=async()=>{
     const id=accountId.current;if(!id)throw new Error('로그인이 필요합니다.');
     const data=await rpc<{today:string;days:string[]}>('gs_check_in');
-    if(accountId.current===id){setAttendance(data);setAttendanceError('');}
+    if(accountId.current===id){setAttendance(data);setAttendanceError('');await refreshNotifications();}
   };
   const badges=badgeProgress(participations,challenges,attendance.days);
   const personalRanks: PersonalRank[]=members.map((m,i)=>({rank:i+1,userId:m.id,nickname:m.nickname,university:m.university,department:m.department,carbonReduction:m.carbonReduction,points:m.points,isCurrentUser:m.id===user.id}));
@@ -127,7 +153,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if(accountId.current!==id)return;
     setUser(data.user);setParticipations(data.participations);setIsAuthenticated(true);setSyncError('');
     setNeedsProfile(!data.profileComplete);
-  },[]);
+    await refreshNotifications();
+  },[refreshNotifications]);
   useEffect(()=>{
     let active=true;
     const authParams=new URLSearchParams(location.hash.slice(1));
@@ -140,7 +167,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const {data:{subscription}}=backend.auth.onAuthStateChange((_event,session)=>{
       const next=session?.user.id??null;
       if(next!==accountId.current){
-        accountId.current=next;setUser(emptyUser);setParticipations([]);setMembers([]);setIsAuthenticated(false);setNeedsProfile(false);setAttendance({today:'',days:[]});setAttendanceError('');setIsAttendanceOpen(false);
+        accountId.current=next;setUser(emptyUser);setParticipations([]);setMembers([]);setIsAuthenticated(false);setNeedsProfile(false);setAttendance({today:'',days:[]});setAttendanceError('');setIsAttendanceOpen(false);setInbox({items:[],unread:0});setNotificationError('');setIsNotificationOpen(false);++notificationVersion.current;
         setSelectedChallenge(null);setChallengeToVerify(null);setIsVerificationOpen(false);setIsSuccessModalOpen(false);
       }
       if(!next){setLoading(false);return;}
@@ -237,6 +264,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         user,
         isAuthenticated,
+        inbox,notificationError,refreshNotifications,readNotifications,isNotificationOpen,setIsNotificationOpen,
         needsProfile,
         activeTab,
         setActiveTab,
