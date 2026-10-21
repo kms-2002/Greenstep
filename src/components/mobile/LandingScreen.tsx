@@ -55,7 +55,7 @@ export const LandingScreen: React.FC = () => {
           </h2>
 
           <p className="text-xs text-slate-600 font-normal leading-relaxed">
-            진주시 소재 대학과 시민이 함께하는 친환경 실천을 인증하고 탄소 포인트와 전체 랭킹을 확인해요.
+            진주시 소재 대학과 시민이 함께하는 친환경 실천을 인증하고 포인트를 모으고 우리 동네 실천 지도를 함께 채워요.
           </p>
         </div>
       </div>

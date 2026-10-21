@@ -3,6 +3,8 @@ import { estimateCarbon, supportsWasteMeasurement } from '../../lib/carbonEstima
 import { verificationRequest } from '../../lib/challengeVerification';
 import { useApp } from '../../context/AppContext';
 import { Camera, X } from 'lucide-react';
+import { JinjuRegionMap } from '../common/JinjuRegionMap';
+import { regions, regionAt, regionById } from '../../lib/jinjuRegions';
 
 export const VerificationModal: React.FC = () => {
   const { isVerificationOpen, setIsVerificationOpen, challengeToVerify, completeCertification } = useApp();
@@ -18,9 +20,14 @@ export const VerificationModal: React.FC = () => {
   const [saveError, setSaveError] = useState('');
   const [baseline, setBaseline] = useState('');
   const [actual, setActual] = useState('');
+  const [location, setLocation] = useState('');
+  const [showMap, setShowMap] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [locating, setLocating] = useState(false);
   const stop = () => { stream.current?.getTracks().forEach(t => t.stop()); stream.current=null; setReady(false); };
   useEffect(() => {
     generation.current++; stop(); setSelectedImage(null); setTicket(''); setSaveError(''); setOpening(false);setSaving(false);setBaseline('');setActual('');
+    setLocation('');setShowMap(false);setLocationError('');setLocating(false);
     return () => { generation.current++; stream.current?.getTracks().forEach(t => t.stop()); stream.current=null; };
   }, [isVerificationOpen, challengeToVerify?.id]);
   useEffect(() => {
@@ -64,9 +71,24 @@ export const VerificationModal: React.FC = () => {
   const submit=async()=>{
     if(!selectedImage||saving||measurementError)return;
     setSaving(true);setSaveError('');
-    try{await completeCertification(challengeToVerify.id,selectedImage,measurement,ticket);}
+    try{await completeCertification(challengeToVerify.id,selectedImage,measurement,ticket,location?{regionId:location}:undefined);}
     catch(e){setSaveError(e instanceof Error?e.message:'분석하지 못했습니다. 다시 촬영해주세요.');}
     finally{setSaving(false);}
+  };
+  const locate = () => {
+    if (!navigator.geolocation) { setLocationError('이 브라우저는 위치 기능을 지원하지 않아요. 지도에서 선택해주세요.'); return; }
+    const run = generation.current;
+    setLocating(true);setLocationError('');
+    navigator.geolocation.getCurrentPosition(position => {
+      if (run !== generation.current) return;
+      setLocating(false);
+      const p = regionAt(position.coords.longitude,position.coords.latitude);
+      if (!p) {setLocationError('현재 위치가 진주 지도 범위 밖입니다. 실제 실천 장소를 지도에서 선택하거나 위치 없이 인증해주세요.');return;}
+      setLocation(p.id);
+    }, () => {
+      if (run !== generation.current) return;
+      setLocating(false);setLocationError('위치를 가져오지 못했어요. 지도에서 직접 선택할 수 있습니다.');
+    }, {timeout:10000,maximumAge:0});
   };
   return <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
     <div role="dialog" aria-modal="true" aria-label="실시간 활동 사진 인증" className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -85,6 +107,15 @@ export const VerificationModal: React.FC = () => {
           <button disabled={opening||saving} onClick={openCamera} className="flex-1 p-3 rounded-xl bg-emerald-50 text-emerald-800 font-bold disabled:opacity-50">{opening?'카메라 연결 중…':selectedImage?'다시 촬영':'카메라 열기'}</button>
           {ready&&!selectedImage&&<button onClick={capture} disabled={opening||saving} className="flex-1 p-3 rounded-xl bg-emerald-700 text-white flex items-center justify-center gap-2"><Camera size={18}/>촬영</button>}
         </div>
+        <section className="space-y-2 rounded-2xl bg-slate-50 p-3 text-xs">
+          <h4 className="font-bold">실천 장소 남기기 (선택)</h4>
+          <p className="leading-relaxed text-slate-600">거주지가 아닌 이번 활동을 한 장소를 선택해주세요. 행정동 또는 통합권역 이름만 저장하며, 활동 공개 설정을 켜면 익명 지도 집계에 포함됩니다. 위치는 AI 인증이나 포인트 조건이 아닙니다.</p>
+          <select aria-label="실천 지역" disabled={saving} value={location} onChange={e=>setLocation(e.target.value)} className="w-full rounded-xl border bg-white p-3"><option value="">지역 미등록</option>{regions.map(r=><option key={r.id} value={r.id}>{r.name} · {r.members.join(", ")}</option>)}</select>
+          <button disabled={saving} onClick={()=>setShowMap(v=>!v)} className="rounded-xl border bg-white p-2">{showMap?'지도 접기':'지도에서 장소 선택'}</button>
+          {showMap && <><JinjuRegionMap selected={location} onSelect={id=>{if(!saving)setLocation(id);}}/><p>지도의 실천 장소를 누르거나 현재 위치를 사용하세요.</p><button disabled={saving||locating} onClick={locate} className="rounded-xl bg-emerald-100 p-2">{locating?'위치 확인 중…':'현재 위치 사용'}</button></>}
+          {location && <><div className="flex items-center justify-between"><span>선택됨 · {regionById(location)?.name}</span><button disabled={saving} onClick={()=>setLocation('')} className="p-2 underline">선택 해제</button></div><p className="text-slate-500">GPS와 경계에는 오차가 있을 수 있어요. 실제 활동 지역이 맞는지 확인해주세요.</p></>}
+          {locationError && <p role="status" className="text-amber-800">{locationError}</p>}
+        </section>
           {hasMeasurement && (
             <section className="rounded-xl bg-emerald-50 p-3 space-y-2 text-xs text-emerald-900">
               <h4 className="font-bold">음식물쓰레기 감축 무게 (선택)</h4>
