@@ -5,7 +5,6 @@ import { HomeRanking } from './HomeRanking';
 import { VirtualTree } from '../VirtualTree';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import {
-  MapPin,
   Store,
   Building2,
   CalendarCheck2,
@@ -36,30 +35,9 @@ export const HomeTab: React.FC = () => {
   const [activeModal, setActiveModal] = useState<'store' | 'myStore' | 'partner' | 'calendar' | 'faq' | 'point' | 'ranking' | null>(null);
 
   const banners = [
-    {
-      id: 1,
-      tag: '시범운영',
-      title: '탄소중립포인트 모바일앱 신규서비스 시범운영안내',
-      date: '기간: 2026. 09. 16(수) ~ 10월 (본 게시시점까지)',
-      bg: 'bg-rose-100/90 border-rose-200/80 text-rose-950',
-      badgeBg: 'bg-rose-600 text-white',
-    },
-    {
-      id: 2,
-      tag: 'GNU 이벤트',
-      title: '경상국립대 경영대학 텀블러 지참 시 300P 즉시 적립!',
-      date: '기간: 2026. 09. 01 ~ 상시 진행 (가좌캠 카페)',
-      bg: 'bg-emerald-100/90 border-emerald-200/80 text-emerald-950',
-      badgeBg: 'bg-emerald-600 text-white',
-    },
-    {
-      id: 3,
-      tag: '진주시 협력',
-      title: '진주시 남강 자전거 라이딩 챌린지 탄소 포인트 우대',
-      date: '기간: 2026. 09. 10 ~ 11. 30',
-      bg: 'bg-sky-100/90 border-sky-200/80 text-sky-950',
-      badgeBg: 'bg-sky-600 text-white',
-    },
+    { id: 1, tag: '진주 소식', title: '진주시, 2026 지자체 탄소중립 우수사례 선정', date: '브레이크뉴스 · 2026.08.25', href: 'https://m.breaknews.com/1231417', bg: 'bg-rose-100/90 border-rose-200/80 text-rose-950', badgeBg: 'bg-rose-600 text-white' },
+    { id: 2, tag: '친환경 이동', title: '하모콜버스, 진주시 탄소중립 주요 이행성과로 평가', date: '시선뉴스 · 지역 교통 이야기', href: 'https://www.sisunnews.co.kr/news/articleView.html?idxno=245840', bg: 'bg-sky-100/90 border-sky-200/80 text-sky-950', badgeBg: 'bg-sky-600 text-white' },
+    { id: 3, tag: '시민 참여', title: '진주시 기후변화·탄소중립 인식 및 선호도 조사', date: '2026.10.01 ~ 10.31 · 센터 공식 안내', href: 'https://www.gnu.ac.kr/jinjunetzero/na/ntt/selectNttInfo.do?nttSn=8749362&mi=18870', bg: 'bg-emerald-100/90 border-emerald-200/80 text-emerald-950', badgeBg: 'bg-emerald-600 text-white' },
   ];
 
   const todayKey=koreanDay();
@@ -72,12 +50,10 @@ export const HomeTab: React.FC = () => {
   const monthRecords=participations.filter(p=>p.status==='completed'&&p.completedAt&&koreanDay(new Date(p.completedAt)).slice(0,7)===todayKey.slice(0,7));
 
 
-  // Jinju Eco Stores Mock Data
   const jinjuEcoStores = [
-    { name: 'GNU 가좌캠 도서관 1층 카페', type: '텀블러 300원 할인 + 300P', dist: '캠퍼스 내' },
-    { name: '진주 가좌동 제로웨이스트샵 리필가게', type: '용기내 할인 + 탄소포인트', dist: '500m' },
-    { name: '진주 남강 공공자전거 대여소 (가좌)', type: '대중교통 자전거 포인트', dist: '300m' },
-    { name: '경상국립대 칠암캠 혜람관 카페', type: '텀블러 지참 200원 할인', dist: '칠암캠' },
+    { name: '아름다운가게 진주평안점', type: '물품 재사용', description: '기증과 중고물품 구매로 자원순환을 실천해보세요.', source: 'https://www.gne.go.kr/e-nanumi/user/bbs/BD_selectBbs.do?q_bbsDocNo=3791&q_bbsSn=1103' },
+    { name: '한살림 진주매장', type: '친환경 장보기', description: '장바구니를 챙겨 필요한 만큼 장보기를 실천해보세요.', source: 'https://cdnc.heyzine.com/files/uploaded/v3/8d06f67de29083abcfed16988eee83812ad6d2b6.pdf' },
+    { name: '갤러리아백화점 진주점', type: '녹색매장 지정 이력', description: '2023 지속가능경영보고서에 녹색매장으로 소개된 곳입니다. 방문 시 녹색제품 표시를 확인해보세요.', source: 'https://www.hwam.co.kr/resources/kr/file/Hanwha_Solutions_Sustainability_Report_2023.pdf' },
   ];
 
   // User's Completed Activities Feed
@@ -123,15 +99,18 @@ export const HomeTab: React.FC = () => {
           </button>
         </div>
 
-        <h3 className="text-sm font-bold tracking-tight leading-snug pr-6 font-sans">
-          {banners[currentBanner].title}
-        </h3>
+        <a href={banners[currentBanner].href} target="_blank" rel="noopener noreferrer" className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4">
+          <h3 className="text-sm font-bold tracking-tight leading-snug pr-6 font-sans min-h-10">{banners[currentBanner].title}</h3>
+          <span className="mt-2 block text-[11px] font-semibold opacity-80">기사·활동 자세히 보기 ↗</span>
+        </a>
 
         {/* Dots indicator */}
         <div className="flex items-center space-x-1 mt-3">
           {banners.map((_, idx) => (
-            <div
+            <button
               key={idx}
+              aria-label={`${idx + 1}번째 소식 보기`}
+              aria-pressed={idx === currentBanner}
               onClick={() => setCurrentBanner(idx)}
               className={`h-1 rounded-full transition-all cursor-pointer ${
                 idx === currentBanner ? 'w-4 bg-slate-800' : 'w-1 bg-slate-400/40'
@@ -236,7 +215,7 @@ export const HomeTab: React.FC = () => {
       {/* Home shortcuts */}
       <div className="grid grid-cols-4 gap-2.5 pt-1">
         {([
-          { id: 'myStore', label: '나의매장', Icon: Store, color: 'bg-amber-100 text-amber-600' },
+          { id: 'myStore', label: '추천매장', Icon: Store, color: 'bg-amber-100 text-amber-600' },
           { id: 'partner', label: '참여기업', Icon: Building2, color: 'bg-sky-100 text-sky-600' },
           { id: 'point', label: '포인트샵', Icon: Gift, color: 'bg-purple-100 text-purple-600' },
           { id: 'ranking', label: '랭킹', Icon: Trophy, color: 'bg-emerald-100 text-emerald-600' },
@@ -352,51 +331,36 @@ export const HomeTab: React.FC = () => {
 
             {activeModal === 'ranking' && <HomeRanking />}
 
-            {activeModal === 'store' && (
+            {(activeModal === 'store' || activeModal === 'myStore') && (
               <div className="space-y-3">
-                <div className="flex items-center space-x-2 text-emerald-600 font-black">
-                  <MapPin className="w-5 h-5" />
-                  <h3 className="text-base text-slate-900">진주 친환경 제로웨이스트 매장</h3>
-                </div>
-                <p className="text-xs text-slate-500">경상국립대 주변 텀블러 할인 및 용기내 매장입니다.</p>
-                <div className="space-y-2 pt-1">
-                  {jinjuEcoStores.map((st, i) => (
-                    <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-bold text-slate-800 block">{st.name}</span>
-                        <span className="text-[11px] text-emerald-600 font-medium">{st.type}</span>
-                      </div>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-bold">{st.dist}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeModal === 'myStore' && (
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2 text-amber-600 font-black">
-                  <Store className="w-5 h-5" />
-                  <h3 className="text-base text-slate-900">나의 자주 가는 매장</h3>
-                </div>
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/60 space-y-2 text-xs">
-                  <div className="font-bold text-amber-900">GNU 가좌캠 도서관 1층 카페</div>
-                  <p className="text-amber-800 text-[11px]">누적 텀블러 할인 12회 받음 (총 3,600원 할인 & 3,600P 적립 완료)</p>
-                </div>
+                <h3 className="flex items-center gap-2 pr-5 text-base font-black text-slate-900"><Store className="w-5 h-5 text-emerald-600" />진주시 친환경 매장 추천</h3>
+                <p className="text-xs leading-relaxed text-slate-500">재사용과 친환경 소비를 시작할 수 있는 매장이에요. 방문 전 운영 정보와 참여 조건을 확인해주세요.</p>
+                {jinjuEcoStores.map(st => <article key={st.name} className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3.5 space-y-2">
+                  <span className="inline-block rounded-full bg-white px-2 py-1 text-[10px] font-bold text-emerald-700">{st.type}</span>
+                  <h4 className="text-sm font-bold text-slate-800">{st.name}</h4>
+                  <p className="text-xs leading-relaxed text-slate-600">{st.description}</p>
+                  <div className="flex gap-3 text-xs font-bold text-emerald-700">
+                    <a href={`https://map.naver.com/p/search/${encodeURIComponent(st.name)}`} target="_blank" rel="noopener noreferrer">위치·운영정보 ↗</a>
+                    <a href={st.source} target="_blank" rel="noopener noreferrer">소개 자료 ↗</a>
+                  </div>
+                </article>)}
+                <p className="text-[10px] leading-relaxed text-slate-500">추천 매장 안내이며 앱 제휴·포인트 지급을 보장하지 않습니다. 지정 이력은 현재 인증 상태와 다를 수 있습니다.</p>
               </div>
             )}
 
             {activeModal === 'partner' && (
               <div className="space-y-3">
-                <div className="flex items-center space-x-2 text-sky-600 font-black">
-                  <Building2 className="w-5 h-5" />
-                  <h3 className="text-base text-slate-900">GNU 탄소중립 참여 기업 및 기관</h3>
-                </div>
-                <div className="space-y-2 text-xs">
-                  <div className="p-3 bg-sky-50 rounded-xl border border-sky-100 font-bold text-sky-900">경상국립대학교 경영대학 학부</div>
-                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 font-bold text-emerald-900">진주시청 환경교통국</div>
-                  <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100 font-bold text-indigo-900">한국남동발전 본사</div>
-                </div>
+                <h3 className="flex items-center gap-2 pr-5 text-base font-black text-slate-900"><Building2 className="w-5 h-5 text-sky-600" />참여 기업 및 기관</h3>
+                {[
+                  ['경상국립대학교', '대학과 함께하는 지역 환경 실천'],
+                  ['진주시청 환경산림국', '기후환경과 · 자원순환과'],
+                  ['경상남도 탄소중립지원센터', '지역 탄소중립 정책 및 실천 지원'],
+                  ['진주시 시설관리공단', '시민 생활과 공공시설'],
+                ].map(([name, description], index) => <div key={name} className="flex gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-3.5">
+                  <span className="text-sky-600 font-black text-sm">0{index + 1}</span>
+                  <div><h4 className="text-sm font-bold text-slate-900">{name}</h4><p className="mt-1 text-xs text-slate-500">{description}</p></div>
+                </div>)}
+                <p className="text-[10px] text-slate-500">지역 관련 기관 안내 · 앱의 공식 제휴 여부는 별도 확인이 필요합니다.</p>
               </div>
             )}
 
