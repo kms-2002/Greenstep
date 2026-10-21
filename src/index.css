@@ -59,7 +59,7 @@
   border-radius: 51px;
   width: 100%;
   height: 100%;
-  padding: 1.2px;
+  padding: 1px;
   overflow: hidden;
 }
 
@@ -78,6 +78,7 @@
   width: 100%;
   height: 100%;
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -158,10 +159,13 @@
 }
 
 .bottom-nav {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* The home indicator owns the bottom safe area; do not add it twice. */
+  padding-bottom: 0;
+  background: #fff;
 }
 
 .home-indicator-area {
+  background: #fff;
   padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
 }
 

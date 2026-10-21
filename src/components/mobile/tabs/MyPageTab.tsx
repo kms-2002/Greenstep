@@ -187,7 +187,7 @@ export const MyPageTab: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setProfileMessage('이메일·학번·인증 사진은 본인만 조회합니다. 닉네임·학교·포인트·감축 합계는 가입자 랭킹에 표시됩니다. 상세 챌린지 기록은 공개 설정을 켰을 때 친구에게만 보입니다. 데이터는 Supabase에 저장됩니다.')}
+          onClick={() => setProfileMessage('이메일·학번·인증 사진은 본인만 조회합니다. 닉네임·학교·포인트·감축 합계는 친구 찾기에 표시됩니다. 상세 챌린지 기록은 공개 설정을 켰을 때 친구에게만 보입니다. 공개한 활동의 위치는 행정동·통합권역 단위로 지도 집계에 포함됩니다. 데이터는 Supabase에 저장됩니다.')}
           className="w-full p-3.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors"
         >
           <div className="flex items-center space-x-3">

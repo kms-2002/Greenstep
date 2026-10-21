@@ -11,7 +11,7 @@ import { ChallengeDetailModal } from './components/mobile/ChallengeDetailModal';
 import { LandingScreen } from './components/mobile/LandingScreen';
 import { HomeTab } from './components/mobile/tabs/HomeTab';
 import { ChallengeTab } from './components/mobile/tabs/ChallengeTab';
-import { RankingTab } from './components/mobile/tabs/RankingTab';
+import { MapTab } from './components/mobile/tabs/MapTab';
 import { GreenQuizTab } from './components/mobile/tabs/GreenQuizTab';
 import { MyPageTab } from './components/mobile/tabs/MyPageTab';
 import { GreenstepChatbot } from './components/mobile/GreenstepChatbot';
@@ -101,7 +101,7 @@ const MainContent: React.FC = () => {
                       <main className="flex-1 overflow-y-auto bg-slate-50">
                         {activeTab === 'home' && <HomeTab />}
                         {activeTab === 'challenge' && <ChallengeTab />}
-                        {activeTab === 'ranking' && <RankingTab />}
+                        {activeTab === 'map' && <MapTab />}
                         {activeTab === 'quiz' && <GreenQuizTab />}
                         {activeTab === 'my' && <MyPageTab />}
                       </main>

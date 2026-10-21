@@ -378,7 +378,7 @@ export const AuthModal: React.FC = () => {
 
           <p className="text-[11px] text-center text-slate-400 font-light">
             {signupMode
-              ? '닉네임·학교·활동 합계는 랭킹에 표시됩니다. 상세 활동은 별도로 공개할 수 있어요.'
+              ? '닉네임·학교·활동 합계는 친구 찾기에 표시됩니다. 활동 공개 시 위치는 지역 단위 지도 집계에 포함돼요.'
               : '등록한 이메일과 비밀번호로 로그인할 수 있습니다.'}
           </p>
         </form>
