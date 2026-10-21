@@ -139,7 +139,7 @@ const UserGreenQuiz: React.FC = () => {
           <div>
             <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold"><Sparkles className="h-3 w-3" />AI 맞춤 환경 퀴즈</span>
             <h2 className="mt-3 text-xl font-black">오늘의 그린퀴즈</h2>
-            <p className="mt-1 text-xs leading-relaxed text-emerald-50">{quiz?.personalizationLabel || '최근 실천을 바탕으로 Groq AI가 오늘의 문제를 만들어요.'}</p>
+            <p className="mt-1 text-xs leading-relaxed text-emerald-50">{quiz?.personalizationLabel || '최근 실천을 바탕으로 AI가 오늘의 문제를 만들어요.'}</p>
           </div>
           <div className="rounded-2xl bg-white/15 p-3"><Clover className="h-7 w-7" /></div>
         </div>

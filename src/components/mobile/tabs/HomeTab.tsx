@@ -1,6 +1,7 @@
 import { koreanDay } from '../../../lib/backend';
 import React, { useState } from 'react';
 import { useApp } from '../../../context/AppContext';
+import { HomeRanking } from './HomeRanking';
 import { VirtualTree } from '../VirtualTree';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import {
@@ -8,7 +9,6 @@ import {
   Store,
   Building2,
   CalendarCheck2,
-  MapPinned,
   HelpCircle,
   Gift,
   Coffee,
@@ -19,7 +19,7 @@ import {
   Leaf,
   Zap,
   Flame,
-  Clover,
+  Trophy,
 } from 'lucide-react';
 import { getChallengeRewardPoints } from '../../../lib/challengeRewards';
 
@@ -33,7 +33,7 @@ export const HomeTab: React.FC = () => {
   const [currentBanner, setCurrentBanner] = useState(0);
 
   // Active Quick Action Modal State
-  const [activeModal, setActiveModal] = useState<'store' | 'myStore' | 'partner' | 'calendar' | 'faq' | 'point' | null>(null);
+  const [activeModal, setActiveModal] = useState<'store' | 'myStore' | 'partner' | 'calendar' | 'faq' | 'point' | 'ranking' | null>(null);
 
   const banners = [
     {
@@ -233,95 +233,19 @@ export const HomeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Quick Action 8 Grid Icon Buttons */}
+      {/* Home shortcuts */}
       <div className="grid grid-cols-4 gap-2.5 pt-1">
-        {/* Button 1: 매장찾기 */}
-        <button
-          onClick={() => setActiveModal('store')}
-          className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-emerald-600" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">매장찾기</span>
-        </button>
-
-        {/* Button 2: 나의매장 */}
-        <button
-          onClick={() => setActiveModal('myStore')}
-          className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center">
-            <Store className="w-5 h-5 text-amber-600" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">나의매장</span>
-        </button>
-
-        {/* Button 3: 참여기업 */}
-        <button
-          onClick={() => setActiveModal('partner')}
-          className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-sky-100 flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-sky-600" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">참여기업</span>
-        </button>
-
-        {/* Button 4: 실적달력 */}
-        <button
-          onClick={() => setActiveModal('calendar')}
-          className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center">
-            <CalendarCheck2 className="w-5 h-5 text-amber-600" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">실적달력</span>
-        </button>
-
-        {/* Button 5: 그린퀴즈 */}
-        <button
-          onClick={() => setActiveTab('quiz')}
-          className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center">
-            <Clover className="w-5 h-5 text-indigo-600" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">그린퀴즈</span>
-        </button>
-
-        {/* Button 6: 실천 지도 */}
-        <button
-          onClick={() => setActiveTab('map')}
-          className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center">
-            <MapPinned className="w-5 h-5 text-rose-600" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">실천 지도</span>
-        </button>
-
-        {/* Button 7: FAQ */}
-        <button
-          onClick={() => setActiveModal('faq')}
-          className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-teal-100 flex items-center justify-center">
-            <HelpCircle className="w-5 h-5 text-teal-600" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">FAQ</span>
-        </button>
-
-        {/* Button 8: 포인트샵 */}
-        <button
-          onClick={() => setActiveModal('point')}
-          className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center">
-            <Gift className="w-5 h-5 text-purple-600" />
-          </div>
-          <span className="text-xs font-bold text-slate-800">포인트샵</span>
-        </button>
+        {([
+          { id: 'myStore', label: '나의매장', Icon: Store, color: 'bg-amber-100 text-amber-600' },
+          { id: 'partner', label: '참여기업', Icon: Building2, color: 'bg-sky-100 text-sky-600' },
+          { id: 'point', label: '포인트샵', Icon: Gift, color: 'bg-purple-100 text-purple-600' },
+          { id: 'ranking', label: '랭킹', Icon: Trophy, color: 'bg-emerald-100 text-emerald-600' },
+        ] as const).map(({ id, label, Icon, color }) => (
+          <button key={id} onClick={() => setActiveModal(id)} className="p-3 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer">
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${color}`}><Icon className="w-5 h-5" /></div>
+            <span className="text-xs font-bold text-slate-800 whitespace-nowrap">{label}</span>
+          </button>
+        ))}
       </div>
 
       {/* 6. 나의 최근 공식 포인트 실천 피드 */}
@@ -418,13 +342,15 @@ export const HomeTab: React.FC = () => {
       {/* Quick Action Interactive Modals */}
       {activeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl border border-slate-100 p-5 space-y-4 animate-scaleUp relative">
+          <div className="bg-white w-full max-w-sm max-h-[85dvh] overflow-y-auto rounded-3xl shadow-2xl border border-slate-100 p-5 space-y-4 animate-scaleUp relative">
             <button
               onClick={() => setActiveModal(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
             >
               <X className="w-5 h-5" />
             </button>
+
+            {activeModal === 'ranking' && <HomeRanking />}
 
             {activeModal === 'store' && (
               <div className="space-y-3">
