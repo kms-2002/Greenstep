@@ -43,7 +43,13 @@ export function MapTab() {
       <p className="mt-2 text-xs text-emerald-50">지역을 누르고, 할 수 있는 실천을 찾아보세요.</p>
     </header>
     <section className="rounded-2xl border border-slate-100 bg-white p-4">
-      <div className="flex justify-between"><h3 className="text-sm font-bold">진주시 공식 탄소 기준</h3><span className="rounded-full bg-slate-100 px-2 py-1 text-[9px]">실시간 측정 아님</span></div>
+      <h3 className="text-sm font-bold">진주시 온실가스 배출량</h3>
+      <p className="mt-3 text-xs text-slate-600">2023년 직접 총배출량</p>
+      <p className="text-2xl font-bold text-emerald-800">1,564.4 <span className="text-xs">천 tCO₂e</span></p>
+      <p className="mt-1 text-xs">2022년 1,636.1천 tCO₂e · 전년 대비 4.4% 감소</p>
+      <p className="mt-2 text-[10px] text-slate-500">온실가스종합정보센터 연간 통계 · 도로수송은 주행거리 기준<br/>공표 2025.12.31 · 자료 확인 2026.11.11</p>
+      <a href="https://www.gir.go.kr/home/board/read.do?menuId=36&boardId=89&boardMasterId=2" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-emerald-700 underline">진주시 배출량 원자료 ↗</a>
+      <h4 className="mt-4 border-t pt-3 text-xs font-bold">진주시 기본계획 목표</h4>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div><p className="text-[10px] text-slate-500">2018년 기준 총배출량</p><strong className="text-xl text-slate-800">2,125.7</strong><span className="ml-1 text-[10px]">천 tCO₂eq</span></div>
         <div><p className="text-[10px] text-slate-500">2030년 목표배출량</p><strong className="text-xl text-emerald-700">1,266.9</strong><span className="ml-1 text-[10px]">천 tCO₂eq</span></div>
@@ -91,7 +97,7 @@ export function MapTab() {
     <section className="space-y-3">
       <h3 className="px-1 font-bold">이어서 해볼 실천</h3>
       <p className="px-1 text-[10px] text-slate-500">도심·읍면의 활동 유형과 선택한 집계의 실천 기록을 참고한 추천입니다. 장소별 참여 조건은 상세 안내에서 확인하세요.</p>
-      {recommended.map(({challenge:c})=><button key={c.id} onClick={()=>setSelectedChallenge(c)} className="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left"><span className="text-2xl">{c.categoryIcon}</span><div className="flex-1"><strong className="text-xs">{c.title}</strong><p className="mt-1 text-[10px] text-slate-500">{c.officialIncentiveId==='zero-leftover-meal'?'잔반 무게를 입력하면 감축량 추정 가능':'인증 후 활동·포인트 기록'}</p></div><ArrowUpRight size={16}/></button>)}
+      {recommended.map(({challenge:c})=><button key={c.id} onClick={()=>setSelectedChallenge(c)} className="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left"><span className="text-2xl">{c.categoryIcon}</span><div className="flex-1"><strong className="text-xs">{c.title}</strong><p className="mt-1 text-[10px] text-slate-500">{c.officialIncentiveId==='zero-leftover-meal'?'잔반 무게를 입력하면 감축량 추정 가능':c.officialIncentiveId==='shopping-bag'?'대체한 비닐봉투 수량으로 감축량 추정':'인증 후 활동·포인트 기록'}</p></div><ArrowUpRight size={16}/></button>)}
     </section>
     <details className="rounded-2xl bg-slate-100 p-4 text-[10px] leading-relaxed text-slate-600">
       <summary className="cursor-pointer text-xs font-bold">지도 출처와 집계 기준</summary>
@@ -99,7 +105,7 @@ export function MapTab() {
       <p className="mt-2">원자료: 통계청 SGIS(공공누리 제1유형), 가공: vuski/admdongkor(CC BY 4.0). GreenStep에서 진주시 추출·읍면 통합·도형 단순화를 했습니다.</p>
       <a className="underline" href={boundarySource} target="_blank" rel="noreferrer">경계 출처</a> · <a className="underline" href="https://sgis.kostat.go.kr" target="_blank" rel="noreferrer">SGIS</a>
       <p className="mt-2">함께한 실천은 활동 공개 회원만 포함하며 소규모 집계를 숨깁니다. 지역 미등록 {data?.unmapped??'—'}건 / 비공개 집계 {data?.hidden??'—'}건. 기존 약 1km 위치 기록은 새 권역에 임의 배정하지 않습니다.</p>
-      <p className="mt-2">감축량은 현재 지원되는 잔반 측정값과 제공된 창원시 계수에 따른 추정치입니다. AI는 입력 무게를 검증하지 않으며, 포인트를 CO₂로 환산하지 않습니다.</p>
+      <p className="mt-2">잔반은 줄인 무게(kg)에 창원시 자료의 계수 1.65를 곱합니다. 장바구니는 직접 입력한 비닐봉투 대체 수량에 환경부 가정편 기준(25 kg CO₂e ÷ 533장)을 적용합니다.</p>
     </details>
   </div>;
 }

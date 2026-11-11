@@ -63,7 +63,7 @@ export const ActivityTab: React.FC = () => {
           <span className="text-xs text-slate-500 font-bold block mb-1">누적 탄소절감량</span>
           <div className="flex items-baseline space-x-1">
             <span className="text-xl font-black text-emerald-700 font-mono">
-              {user.totalCarbonReduction.toFixed(1)}
+              {user.totalCarbonReduction.toLocaleString('ko-KR',{maximumFractionDigits:3})}
             </span>
             <span className="text-xs font-bold text-slate-500">kg CO₂e</span>
           </div>

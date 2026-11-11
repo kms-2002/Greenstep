@@ -75,7 +75,7 @@ export const MyPageTab: React.FC = () => {
                 {user.points.toLocaleString()}P
               </span>
               <span className="text-emerald-300">
-                절감 {user.totalCarbonReduction.toFixed(1)}kg CO₂e
+                절감 {user.totalCarbonReduction.toLocaleString('ko-KR',{maximumFractionDigits:3})}kg CO₂e
               </span>
             </div>
           </div>

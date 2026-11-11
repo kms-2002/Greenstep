@@ -13,7 +13,7 @@ import type {
 } from '../types';
 import { INITIAL_CHALLENGES } from '../mock/initialData';
 import { INITIAL_CARBON_FACTORS } from '../utils/carbonCalculator';
-import type { CarbonEstimate, WasteMeasurement } from '../lib/carbonEstimate';
+import type { CarbonEstimate, CarbonMeasurement } from '../lib/carbonEstimate';
 import { backend, emptyUser, loadAccount, rpc, type Member } from '../lib/backend';
 
 export type TabType = 'home' | 'challenge' | 'map' | 'quiz' | 'my';
@@ -82,7 +82,7 @@ interface AppContextType {
   logout: () => void;
   updateProfile: (updated: Partial<User>) => void;
   joinChallenge: (challengeId: string) => void;
-  completeCertification: (challengeId: string, imageSrc?: string, measurement?: WasteMeasurement, ticket?: string, location?: {regionId:string}) => Promise<void>;
+  completeCertification: (challengeId: string, imageSrc?: string, measurement?: CarbonMeasurement, ticket?: string, location?: {regionId:string}) => Promise<void>;
 
   // Admin Actions
   addAdminChallenge: (newCh: Omit<Challenge, 'id' | 'participantsCount' | 'active'>) => void;
@@ -217,7 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const completing=useRef(false);
   const pendingCompletion=useRef<{key:string;id:string;path?:string}|null>(null);
-  const completeCertification=async(challengeId:string,imageSrc?:string,measurement?:WasteMeasurement,ticket?:string,location?:{regionId:string})=>{
+  const completeCertification=async(challengeId:string,imageSrc?:string,measurement?:CarbonMeasurement,ticket?:string,location?:{regionId:string})=>{
     if(completing.current)throw new Error('저장 중입니다. 잠시 기다려주세요.');
     if(!accountId.current || !imageSrc)throw new Error('로그인과 인증 사진이 필요합니다.');
     completing.current=true;
@@ -230,7 +230,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const verified=await verificationRequest({mode:'verify',ticket,image:imageSrc});
         pending={key,id:verified.participationId,path:verified.path};pendingCompletion.current=pending;
       }
-      const result=await rpc(location?'gs_complete_in_region':'gs_complete',{p_id:pending.id,p_image:pending.path,p_baseline:measurement?.baselineGrams??null,p_actual:measurement?.actualGrams??null,...(location?{p_region:location.regionId}:{})});
+      const bagCount=measurement && 'avoidedBags' in measurement ? measurement.avoidedBags : undefined;
+      const waste=measurement && 'baselineGrams' in measurement ? measurement : undefined;
+      const result=bagCount !== undefined
+        ? await rpc('gs_complete_bag',{p_id:pending.id,p_image:pending.path,p_bags:bagCount,p_region:location?.regionId??null})
+        : await rpc(location?'gs_complete_in_region':'gs_complete',{p_id:pending.id,p_image:pending.path,p_baseline:waste?.baselineGrams??null,p_actual:waste?.actualGrams??null,...(location?{p_region:location.regionId}:{})});
       if(accountId.current!==id)return;
       await refreshAccount();await refreshMembers();
       setCompletionResult({challengeTitle:challenges.find(c=>c.id===challengeId)?.title??'',carbonSaved:Number(result.carbon_saved),pointsEarned:result.points,carbonEstimate:result.carbon_estimate});

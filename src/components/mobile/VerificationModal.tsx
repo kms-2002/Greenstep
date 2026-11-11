@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { estimateCarbon, supportsWasteMeasurement } from '../../lib/carbonEstimate';
+import { estimateAvoidedBags, estimateCarbon, supportsWasteMeasurement } from '../../lib/carbonEstimate';
 import { verificationRequest } from '../../lib/challengeVerification';
 import { useApp } from '../../context/AppContext';
 import { Camera, X } from 'lucide-react';
@@ -19,6 +19,7 @@ export const VerificationModal: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [baseline, setBaseline] = useState('');
+  const [bags, setBags] = useState('');
   const [actual, setActual] = useState('');
   const [location, setLocation] = useState('');
   const [showMap, setShowMap] = useState(false);
@@ -26,7 +27,7 @@ export const VerificationModal: React.FC = () => {
   const [locating, setLocating] = useState(false);
   const stop = () => { stream.current?.getTracks().forEach(t => t.stop()); stream.current=null; setReady(false); };
   useEffect(() => {
-    generation.current++; stop(); setSelectedImage(null); setTicket(''); setSaveError(''); setOpening(false);setSaving(false);setBaseline('');setActual('');
+    generation.current++; stop(); setSelectedImage(null); setTicket(''); setSaveError(''); setOpening(false);setSaving(false);setBaseline('');setActual('');setBags('');
     setLocation('');setShowMap(false);setLocationError('');setLocating(false);
     return () => { generation.current++; stream.current?.getTracks().forEach(t => t.stop()); stream.current=null; };
   }, [isVerificationOpen, challengeToVerify?.id]);
@@ -36,6 +37,7 @@ export const VerificationModal: React.FC = () => {
     return () => document.removeEventListener('visibilitychange',pause);
   }, []);
   if (!isVerificationOpen || !challengeToVerify) return null;
+  const isBag = challengeToVerify.officialIncentiveId === 'shopping-bag';
   const hasMeasurement = supportsWasteMeasurement(challengeToVerify);
   const measurement = hasMeasurement && (baseline !== '' || actual !== '')
     ? { baselineGrams:Number(baseline), actualGrams:Number(actual) } : undefined;
@@ -43,6 +45,9 @@ export const VerificationModal: React.FC = () => {
   if(measurement){
     if(baseline===''||actual==='')measurementError='두 무게를 모두 입력하거나 모두 비워주세요.';
     else try{preview=estimateCarbon(challengeToVerify,measurement).estimatedKgCO2e;}catch(e){measurementError=(e as Error).message;}
+  }
+  if (isBag && bags !== '') {
+    try { preview = estimateAvoidedBags(Number(bags)); } catch (e) { measurementError = (e as Error).message; }
   }
   const openCamera = async () => {
     const run=++generation.current;
@@ -71,7 +76,7 @@ export const VerificationModal: React.FC = () => {
   const submit=async()=>{
     if(!selectedImage||saving||measurementError)return;
     setSaving(true);setSaveError('');
-    try{await completeCertification(challengeToVerify.id,selectedImage,measurement,ticket,location?{regionId:location}:undefined);}
+    try{await completeCertification(challengeToVerify.id,selectedImage,isBag && bags !== '' ? {avoidedBags:Number(bags)} : measurement,ticket,location?{regionId:location}:undefined);}
     catch(e){setSaveError(e instanceof Error?e.message:'분석하지 못했습니다. 다시 촬영해주세요.');}
     finally{setSaving(false);}
   };
@@ -116,6 +121,14 @@ export const VerificationModal: React.FC = () => {
           {location && <><div className="flex items-center justify-between"><span>선택됨 · {regionById(location)?.name}</span><button disabled={saving} onClick={()=>setLocation('')} className="p-2 underline">선택 해제</button></div><p className="text-slate-500">GPS와 경계에는 오차가 있을 수 있어요. 실제 활동 지역이 맞는지 확인해주세요.</p></>}
           {locationError && <p role="status" className="text-amber-800">{locationError}</p>}
         </section>
+        {isBag && <section className="space-y-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900">
+          <label className="block font-bold">이번 장보기에서 받지 않은 일회용 비닐봉투 (장)
+            <input type="number" min="0" step="1" disabled={saving} value={bags} onChange={e=>setBags(e.target.value)} placeholder="선택 입력" className="mt-1 w-full rounded-lg border bg-white p-2"/>
+          </label>
+          <p>쓰던 장바구니로 대체한 수량을 입력해주세요. 가방만 지참한 경우 0장, 수량을 모르면 비워두세요.</p>
+          {measurementError ? <p role="alert">{measurementError}</p> : preview !== null && <p role="status">예상 감축량 {preview.toLocaleString('ko-KR',{maximumFractionDigits:3})} kg CO₂e</p>}
+          <p>환경부 가정편 기준 연간 533장 절감 시 약 25 kg CO₂e를 장당 환산한 추정치입니다.</p>
+        </section>}
           {hasMeasurement && (
             <section className="rounded-xl bg-emerald-50 p-3 space-y-2 text-xs text-emerald-900">
               <h4 className="font-bold">음식물쓰레기 감축 무게 (선택)</h4>

@@ -126,7 +126,7 @@ export const HomeTab: React.FC = () => {
           <span className="text-xs text-slate-500 font-bold block mb-1">누적 감축 추정량</span>
           <div className="flex items-baseline space-x-1">
             <span className="text-xl font-black text-emerald-700 font-mono">
-              {user.totalCarbonReduction.toFixed(1)}
+              {user.totalCarbonReduction.toLocaleString('ko-KR',{maximumFractionDigits:3})}
             </span>
             <span className="text-xs font-bold text-slate-500">kg CO₂e</span>
           </div>
@@ -198,7 +198,7 @@ export const HomeTab: React.FC = () => {
           <div className="space-y-0.5 border-x border-slate-200/60">
             <span className="text-[11px] font-semibold text-slate-500 block">오늘의 절감</span>
             <div className="text-base font-bold text-slate-900">
-              {user.todayCarbonReduction.toFixed(1)} <span className="text-[10px] font-medium text-slate-500">(kg CO₂)</span>
+              {user.todayCarbonReduction.toLocaleString('ko-KR',{maximumFractionDigits:3})} <span className="text-[10px] font-medium text-slate-500">(kg CO₂)</span>
             </div>
           </div>
 

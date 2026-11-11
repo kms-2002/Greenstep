@@ -52,7 +52,7 @@ export const VirtualTree: React.FC<VirtualTreeProps> = ({ totalCarbon }) => {
               <span className="text-xs font-normal text-emerald-300/80">({stage.name})</span>
             </h3>
             <p className="text-xs text-emerald-200/90 font-mono">
-              누적 절감 {totalCarbon.toFixed(1)}kg CO₂e
+              누적 절감 {totalCarbon.toLocaleString('ko-KR',{maximumFractionDigits:3})}kg CO₂e
             </p>
           </div>
         </div>

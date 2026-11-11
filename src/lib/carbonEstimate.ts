@@ -2,6 +2,12 @@ import reference from '../data/carbonReference.json';
 import type { Challenge } from '../types';
 
 export interface WasteMeasurement { baselineGrams: number; actualGrams: number }
+export type CarbonMeasurement = WasteMeasurement | { avoidedBags: number };
+// 환경부 탄소중립 생활 실천 안내서(가정편), p.59: 연간 533장 절감 시 약 25 kg CO₂e.
+export function estimateAvoidedBags(count: number) {
+  if (!Number.isSafeInteger(count) || count < 0 || count > 2147483647) throw new Error('봉투 수량을 0 이상의 정수로 입력해주세요.');
+  return Number((count * 25 / 533).toFixed(6));
+}
 export interface CarbonEstimate {
   status: 'estimated' | 'not_calculated';
   calculationVersion: string;

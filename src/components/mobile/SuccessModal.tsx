@@ -41,7 +41,7 @@ export const SuccessModal: React.FC = () => {
 
         <p className="mb-4 text-xs text-slate-500">
           {completionResult.carbonEstimate.status === 'estimated'
-            ? `제공 자료 기준 감축 추정량 ${completionResult.carbonEstimate.estimatedKgCO2e} kg CO₂e (입력 무게 기준)`
+            ? `이번 실천의 감축 추정량 ${completionResult.carbonEstimate.estimatedKgCO2e?.toLocaleString('ko-KR',{maximumFractionDigits:3})} kg CO₂e`
             : completionResult.carbonEstimate.reason}
         </p>
         {/* Level Up Notification if triggered */}
