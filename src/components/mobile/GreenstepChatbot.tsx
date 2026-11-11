@@ -127,7 +127,7 @@ export const GreenstepChatbot: React.FC = () => {
           aria-label="AI 하모 챗봇 열기"
           className="absolute bottom-[70px] right-3 z-40 flex flex-col items-center drop-shadow-[0_4px_12px_rgba(15,23,42,0.22)] transition-transform hover:scale-105 active:scale-95"
         >
-          <span className="mb-[-5px] rounded-md bg-[#559ca8] px-2 py-1 text-[10px] font-black leading-none tracking-wide text-white">Ask AI GNU!</span>
+          <span className="mb-[-5px] rounded-md bg-[#559ca8] px-2 py-1 text-[10px] font-black leading-none tracking-wide text-white">Ask AI 하모</span>
           <img src={`${import.meta.env.BASE_URL}hamo.png`} alt="하모 챗봇" className="h-[62px] w-[62px] object-contain drop-shadow-md" />
         </button>
       )}
