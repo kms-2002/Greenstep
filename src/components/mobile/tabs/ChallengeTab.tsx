@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { challengeCarbonGuide } from '../../../data/challengeCarbon';
 import type { ChallengeCategory } from '../../../types';
 import { useApp } from '../../../context/AppContext';
 import { Search, Sparkles, Users, Zap, RotateCcw, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -279,6 +280,7 @@ export const ChallengeTab: React.FC = () => {
                     </h4>
 
                     <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{ch.description}</p>
+                    <p className="mt-1 text-xs text-emerald-800">감축 추정 · {challengeCarbonGuide(ch.id).label}{challengeCarbonGuide(ch.id).label.endsWith('kg') ? ' CO₂e' : ''}</p>
                   </div>
                 </div>
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { challengeCarbonGuide, householdGuide } from '../../data/challengeCarbon';
 import { useApp } from '../../context/AppContext';
 import { Camera, CheckCircle2, RotateCcw, ShieldCheck, Sparkles, Users, X, Zap } from 'lucide-react';
 import { getOfficialIncentiveActivity } from '../../data/officialIncentives';
@@ -18,6 +19,7 @@ export const ChallengeDetailModal: React.FC = () => {
 
   const officialIncentive = getOfficialIncentiveActivity(selectedChallenge.officialIncentiveId);
   const challengeRewardPoints = getChallengeRewardPoints(selectedChallenge);
+  const carbon = challengeCarbonGuide(selectedChallenge.id);
 
   const completedCount = participations.filter(
     (p) => p.challengeId === selectedChallenge.id && p.status === 'completed'
@@ -74,6 +76,13 @@ export const ChallengeDetailModal: React.FC = () => {
 
         {/* Content Body */}
         <div className="p-6 space-y-4">
+          <section className="rounded-xl bg-slate-50 p-3 text-xs">
+            <h3 className="font-bold">탄소 감축 추정 · {carbon.label}{carbon.label.endsWith('kg') ? ' CO₂e' : ''}</h3>
+            <p className="mt-1">{carbon.detail}</p>
+            {carbon.source && (selectedChallenge.id === 'ch-food-1' ? <p>{carbon.source}</p> :
+              <a href={householdGuide} target="_blank" rel="noreferrer" className="mt-2 block text-emerald-700 underline">환경부·한국환경보전원, 가정의 탄생(2024) · {carbon.source}</a>)}
+            {!['shopping-bag','zero-leftover-meal'].includes(selectedChallenge.officialIncentiveId ?? '') && <p className="mt-1 text-slate-500">개인 누적 감축량 집계 대상에서 제외됩니다.</p>}
+          </section>
           {/* Main Info Metrics Grid */}
           <div className="grid grid-cols-2 gap-2 p-3 bg-emerald-50/80 rounded-2xl border border-emerald-100 text-center">
             <div className="p-2 border-r border-emerald-200/60">
